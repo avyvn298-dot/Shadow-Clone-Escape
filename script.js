@@ -1,4 +1,4 @@
-/* Shadow Clone Escape — Level System + Powerups + Clone Types */
+/* Shadow Clone Escape — Extended with Levels, Portal, Clone Cleanup, and Popup Messages */
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -14,9 +14,9 @@ let clones = [];
 let powerups = [];
 let level = 1;
 let gameOver = false;
-let messages = []; // floating text
+let messages = []; // floating text popups
 
-// Colors per level for variety
+// Colors per level for visual variety
 const levelColors = ["#2d2d2d", "#1e2a38", "#2a1e38", "#382a1e", "#1e3826"];
 
 // --- Utility ---
@@ -29,13 +29,11 @@ function addMessage(text, x, y, color = "white") {
   messages.push({ text, x, y, alpha: 1, color });
 }
 
-// --- Maze Generation (Recursive Division) ---
+// --- Maze Generation ---
 function generateMaze(r, c) {
   let grid = Array(r).fill().map(() => Array(c).fill(1)); // walls
   function carve(x, y) {
-    const dirs = [
-      [2, 0], [-2, 0], [0, 2], [0, -2]
-    ].sort(() => Math.random() - 0.5);
+    const dirs = [[2, 0], [-2, 0], [0, 2], [0, -2]].sort(() => Math.random() - 0.5);
     grid[y][x] = 0;
     for (let [dx, dy] of dirs) {
       let nx = x + dx, ny = y + dy;
@@ -89,7 +87,7 @@ class Player {
   }
 }
 
-// --- Portal ---
+// --- Portal (NEW) ---
 class Portal {
   constructor(x, y) {
     this.x = x;
@@ -115,7 +113,7 @@ class Clone {
     this.size = TILE_SIZE * 0.6;
     this.type = type;
     this.speed = type === "fast" ? 3 : 2;
-    this.lifetime = 60 * 20; // 20s
+    this.lifetime = 60 * 40; // 40s max lifespan
   }
   update() {
     this.lifetime--;
@@ -183,8 +181,10 @@ function initLevel() {
 function update() {
   if (gameOver) return;
   player.update();
+
   // clones
   clones = clones.filter(c => c.update());
+
   // check collisions
   for (let clone of clones) {
     if (Math.hypot(player.x - clone.x, player.y - clone.y) < TILE_SIZE/2) {
@@ -194,11 +194,13 @@ function update() {
       }
     }
   }
-  // portal
+
+  // portal (NEW)
   if (Math.hypot(player.x - portal.x, player.y - portal.y) < TILE_SIZE/2) {
     level++;
     initLevel();
   }
+
   // powerups
   for (let i=powerups.length-1; i>=0; i--) {
     let p = powerups[i];
@@ -209,6 +211,7 @@ function update() {
       powerups.splice(i,1);
     }
   }
+
   // spawn clones
   if (Math.random() < 0.01 * level) {
     let side = Math.random() < 0.5 ? 0 : canvas.width;
@@ -217,6 +220,7 @@ function update() {
     clones.push(new Clone(side, y, type));
     addMessage(`${type} clone appeared!`, side, y, "orange");
   }
+
   // messages
   for (let i=messages.length-1; i>=0; i--) {
     messages[i].y -= 0.5;
