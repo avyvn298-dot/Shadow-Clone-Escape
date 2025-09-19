@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Shadow Clone Escape — v2 Full</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Shadow Clone Escape</h1>
+    <div class="top-controls">
+      <button id="menuBtnHeader" class="small">Menu</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside id="leftPanel" class="panel">
+      <div id="menu" class="panel-block">
+        <p class="big">Survive as long as possible — a new solvable maze each run.</p>
+        <div class="menu-row">
+          <button id="startBtn">Start Run</button>
+          <button id="tutorialBtn">Tutorial</button>
+          <button id="settingsBtn">Settings</button>
+        </div>
+        <p id="bestRecordText">Best: —</p>
+      </div>
+
+      <div id="tutorial" class="panel-block panel-hidden">
+        <h3>Tutorial</h3>
+        <ul>
+          <li>Move with WASD / arrow keys or on-screen controls (mobile).</li>
+          <li>Avoid clones — they replay your past path.</li>
+          <li>Collect power-ups (Speed/Cloak/Shockwave) to survive longer.</li>
+          <li>Try to set a top time — leaderboard saves best runs locally.</li>
+        </ul>
+      </div>
+
+      <div id="settings" class="panel-block panel-hidden">
+        <h3>Settings</h3>
+        <label><input type="checkbox" id="musicToggle" checked> Music</label><br>
+        <label><input type="checkbox" id="sfxToggle" checked> SFX</label><br>
+        <label>Difficulty:
+          <input id="difficulty" type="range" min="0" max="2" step="1" value="1">
+        </label>
+        <p class="muted small">Easy ← Normal → Hard</p>
+        <hr>
+        <h3>Leaderboard</h3>
+        <ol id="leaderboardList"></ol>
+        <button id="clearLeaderboard" class="small warn">Clear Leaderboard</button>
+      </div>
+    </aside>
+
+    <section id="gameSection" class="panel center-panel">
+      <div id="canvasWrap">
+        <canvas id="gameCanvas"></canvas>
+        <canvas id="miniMap" class="minimap"></canvas>
+      </div>
+
+      <div id="ui" class="hud panel-hidden">
+        <div class="hud-top">
+          <div id="status">Survive as long as you can</div>
+          <div id="timer">Time: 0s</div>
+          <div id="powerupBox"></div>
+        </div>
+
+        <div class="hud-bottom">
+          <button id="restartBtn" class="small" style="display:none;">Restart</button>
+          <button id="menuBtn" class="small" style="display:none;">Back to Menu</button>
+        </div>
+      </div>
+
+      <div id="mobileControls" class="mobile-controls hidden">
+        <div id="dpad" class="dpad">
+          <button data-dir="up" class="dpad-btn up">▲</button>
+          <div class="dpad-row">
+            <button data-dir="left" class="dpad-btn left">◀</button>
+            <button data-dir="down" class="dpad-btn down">▼</button>
+            <button data-dir="right" class="dpad-btn right">▶</button>
+          </div>
+        </div>
+        <div class="mobile-actions">
+          <button id="btnPower" class="small">Power</button>
+          <button id="btnPause" class="small">⏸</button>
+        </div>
+      </div>
+    </section>
+
+    <aside id="rightPanel" class="panel">
+      <div class="panel-block">
+        <h3>Controls</h3>
+        <p>Keyboard: WASD / Arrow keys. Mobile: on-screen D-Pad + Power button.</p>
+      </div>
+      <div class="panel-block">
+        <h3>Power-ups</h3>
+        <ul>
+          <li><b>Speed</b> — movement boost for a short time.</li>
+          <li><b>Cloak</b> — clones ignore you briefly.</li>
+          <li><b>Shockwave</b> — pushes nearby clones back along their path.</li>
+        </ul>
+      </div>
+      <div class="panel-block">
+        <h3>Tips</h3>
+        <ul>
+          <li>Plan your path — clones replay your exact steps.</li>
+          <li>Use corridors to funnel clones past you.</li>
+          <li>Save power-ups for tight situations.</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <small>Built for GitHub Pages — open-source. Replace audio links with your own files if you like.</small>
+  </footer>
+
+  <!-- Audio (CDN samples; replace with repo files if you prefer) -->
+  <audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/11/02/audio_dfe97b58c8.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="ambientSfx" loop>
+    <source src="https://cdn.pixabay.com/audio/2021/08/08/audio_ambient-1-65627.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="spawnSfx"><source src="https://cdn.pixabay.com/audio/2021/08/08/audio_ef4f9f1b0a.mp3" type="audio/mpeg"></audio>
+  <audio id="deathSfx"><source src="https://cdn.pixabay.com/audio/2022/03/15/audio_13a2f2f5a4.mp3" type="audio/mpeg"></audio>
+  <audio id="pickupSfx"><source src="https://cdn.pixabay.com/audio/2022/07/07/audio_d0f9ab3d3c.mp3" type="audio/mpeg"></audio>
+  <audio id="shockSfx"><source src="https://cdn.pixabay.com/audio/2022/01/28/audio_1a3b6d2a5b.mp3" type="audio/mpeg"></audio>
+  <audio id="newRecordSfx"><source src="https://cdn.pixabay.com/audio/2022/07/07/audio_d0f9ab3d3c.mp3" type="audio/mpeg"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
