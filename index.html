@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Clone Escape — Endless</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Shadow Clone Escape</h1>
+
+  <div id="menu">
+    <p class="big">Survive as long as you can. Every run generates a new solvable maze.</p>
+    <p>Move: <b>WASD</b> or <b>Arrow Keys</b></p>
+    <div class="controls">
+      <button id="startBtn">Start Run</button>
+      <button id="tutorialBtn">Quick Tutorial</button>
+    </div>
+    <div id="tutorial" style="display:none;">
+      <p>- You spawn at the top-left passage.</p>
+      <p>- Survive. Clones spawn and replay your previous path.</p>
+      <p>- Music starts after pressing Start (autoplay rules).</p>
+    </div>
+    <p id="bestRecordText">Best: —</p>
+  </div>
+
+  <canvas id="gameCanvas" width="600" height="600" style="display:none;"></canvas>
+
+  <div id="ui" style="display:none;">
+    <p id="status">Survive as long as possible!</p>
+    <p id="timer">Time: 0s</p>
+    <div class="controls">
+      <button id="restartBtn" style="display:none;">Restart</button>
+      <button id="menuBtn" style="display:none;">Back to Menu</button>
+    </div>
+  </div>
+
+  <audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/11/02/audio_dfe97b58c8.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="spawnSound">
+    <source src="https://cdn.pixabay.com/audio/2021/08/08/audio_ef4f9f1b0a.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="loseSound">
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_13a2f2f5a4.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="newRecordSound">
+    <source src="https://cdn.pixabay.com/audio/2022/07/07/audio_d0f9ab3d3c.mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
