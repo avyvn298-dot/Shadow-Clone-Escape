@@ -1,55 +1,33 @@
 :root{
   --bg:#070707; --panel:#0f0f10; --accent:#ff5b5b; --muted:#9aa;
-  --glass: rgba(255,255,255,0.03);
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:#eee;-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:#eee}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.03)}
 .topbar h1{margin:0;color:var(--accent);font-size:18px}
 .layout{display:grid;grid-template-columns:260px 1fr 260px;gap:12px;padding:12px}
 .panel{background:linear-gradient(180deg,var(--panel),#0b0b0b);border-radius:10px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,0.6)}
 .panel-block{margin-bottom:12px}
-.big{font-size:16px}
 .menu-row{display:flex;gap:8px;flex-wrap:wrap}
-button{cursor:pointer;border:none;padding:10px 14px;border-radius:8px;background:linear-gradient(#ff6f6f,#e04a4a);color:#fff;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,0.35)}
+button{cursor:pointer;border:none;padding:10px 14px;border-radius:8px;background:linear-gradient(#ff6f6f,#e04a4a);color:#fff;font-weight:700}
 button.small{padding:6px 10px;font-size:13px;border-radius:6px}
-button.warn{background:linear-gradient(#8a2b2b,#701e1e)}
-.panel-hidden{display:none}
-.muted{color:var(--muted)}
 .center-panel{display:flex;flex-direction:column;align-items:center}
 #canvasWrap{position:relative;width:100%;max-width:980px}
 canvas#gameCanvas{background:linear-gradient(#0a0a0a,#161616);display:block;border-radius:8px;width:100%;height:auto;box-shadow:0 18px 60px rgba(0,0,0,0.7)}
-.minimap{position:absolute;right:12px;top:12px;width:140px;height:100px;border-radius:6px;background:rgba(10,10,10,0.6);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
+.minimap{position:absolute;right:12px;top:12px;width:140px;height:100px;border-radius:6px;background:rgba(10,10,10,0.6)}
 .titleOverlay{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:auto}
-.titleCard{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:20px;border-radius:10px;backdrop-filter: blur(6px);box-shadow:0 10px 40px rgba(0,0,0,0.6); text-align:center}
-#titleGlow{font-size:26px;color:var(--accent);text-shadow:0 6px 28px rgba(255,85,85,0.12); margin:0 0 8px 0; animation: glow 2.5s infinite}
-@keyframes glow { 0%{text-shadow:0 6px 18px rgba(255,85,85,0.08)}50%{text-shadow:0 10px 30px rgba(255,85,85,0.18)}100%{text-shadow:0 6px 18px rgba(255,85,85,0.08)}}
-
+.titleCard{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:20px;border-radius:10px;backdrop-filter: blur(6px);text-align:center}
+#titleGlow{font-size:26px;color:var(--accent);text-shadow:0 6px 28px rgba(255,85,85,0.12); margin:0 0 8px 0; animation:glow 2.5s infinite}
+@keyframes glow {0%{text-shadow:0 6px 18px rgba(255,85,85,0.08)}50%{text-shadow:0 10px 30px rgba(255,85,85,0.18)}100%{text-shadow:0 6px 18px rgba(255,85,85,0.08)}}
 .hud-top{display:flex;gap:18px;align-items:center;justify-content:center;margin-top:8px}
 #status{color:#7af;font-weight:600}
 #timer{color:#ffd86b;font-weight:700}
+#powerupBox{color:#9bffbe}
 .hud-bottom{display:flex;gap:8px;justify-content:center;margin-top:8px}
-
 .mobile-controls{position:fixed;left:10px;bottom:12px;display:flex;gap:14px;align-items:center;z-index:40}
 .mobile-controls.hidden{display:none}
 .dpad{background:rgba(0,0,0,0.35);padding:8px;border-radius:12px;display:flex;flex-direction:column;align-items:center}
 .dpad-row{display:flex;gap:6px;margin-top:6px}
 .dpad-btn{padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.04);color:#fff;border:1px solid rgba(255,255,255,0.03);font-weight:700}
-.mobile-actions{display:flex;flex-direction:column;gap:8px}
 .footer{text-align:center;padding:10px;color:var(--muted);font-size:12px;margin-top:8px}
-
-.small{font-size:13px}
-@media (max-width:1100px){
-  .layout{grid-template-columns:220px 1fr;grid-template-areas:"left center" "right right";align-items:start}
-  #rightPanel{display:none}
-}
-@media (max-width:720px){
-  .layout{grid-template-columns:1fr;padding:8px;gap:8px}
-  #leftPanel{order:2}
-  .center-panel{order:1}
-  .panel{padding:10px}
-  .topbar h1{font-size:16px}
-  .mobile-controls{display:flex}
-  #leftPanel,#rightPanel{display:none}
-  canvas#gameCanvas{height:75vh}
-}
+@media (max-width:720px){ .layout{grid-template-columns:1fr;padding:8px;gap:8px} #leftPanel,#rightPanel{display:none} canvas#gameCanvas{height:75vh} }
