@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-  <title>Shadow Clone Escape — Polished v2</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shadow Clone Escape — Polished Demo</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1 id="gameTitle">Shadow Clone Escape</h1>
+    <h1>Shadow Clone Escape</h1>
     <div class="top-controls">
       <button id="menuBtnHeader" class="small">Menu</button>
     </div>
@@ -17,7 +17,7 @@
   <main class="layout">
     <aside id="leftPanel" class="panel">
       <div id="menu" class="panel-block">
-        <p class="big">Survive as long as possible — every run is a new solvable maze.</p>
+        <p class="big">Survive, escape, and outsmart your shadow.</p>
         <div class="menu-row">
           <button id="startBtn">Start Run</button>
           <button id="tutorialBtn">Tutorial</button>
@@ -29,9 +29,9 @@
       <div id="tutorial" class="panel-block panel-hidden">
         <h3>Tutorial</h3>
         <ul>
-          <li>Move with <b>WASD</b> / <b>Arrow Keys</b>, or use on-screen controls on mobile.</li>
-          <li>Clones replay your steps — avoid contact.</li>
-          <li>Collect power-ups: <i>Speed, Cloak, Shockwave</i>.</li>
+          <li>Move: WASD / Arrow keys or on-screen D-pad (mobile)</li>
+          <li>Clones replay your recent movement; avoid them</li>
+          <li>Reach the glowing portal to clear the level</li>
         </ul>
       </div>
 
@@ -42,20 +42,14 @@
         <label>Difficulty:
           <input id="difficulty" type="range" min="0" max="2" step="1" value="1">
         </label>
-        <p class="muted small">Easy ← Normal → Hard</p>
-        <hr>
-        <h3>Leaderboard</h3>
-        <ol id="leaderboardList"></ol>
-        <button id="clearLeaderboard" class="small warn">Clear Leaderboard</button>
       </div>
     </aside>
 
-    <section id="gameSection" class="panel center-panel">
+    <section class="panel center-panel">
       <div id="canvasWrap">
         <canvas id="gameCanvas"></canvas>
         <canvas id="miniMap" class="minimap" aria-hidden="true"></canvas>
 
-        <!-- Title overlay before start for cinematic feel -->
         <div id="titleOverlay" class="titleOverlay">
           <div class="titleCard">
             <h2 id="titleGlow">Shadow Clone Escape</h2>
@@ -70,8 +64,8 @@
           <div id="status">Survive as long as you can</div>
           <div id="timer">Time: 0s</div>
           <div id="powerupBox"></div>
+          <div id="levelBox">Level: 1</div>
         </div>
-
         <div class="hud-bottom">
           <button id="restartBtn" class="small" style="display:none;">Restart</button>
           <button id="menuBtn" class="small" style="display:none;">Back to Menu</button>
@@ -89,52 +83,29 @@
         </div>
         <div class="mobile-actions">
           <button id="btnPower" class="small">Power</button>
-          <button id="btnPause" class="small">⏸</button>
         </div>
       </div>
     </section>
 
     <aside id="rightPanel" class="panel">
       <div class="panel-block">
-        <h3>Controls</h3>
-        <p>Keyboard: WASD / Arrow keys. Mobile: on-screen D-Pad + Power button.</p>
-      </div>
-      <div class="panel-block">
         <h3>Power-ups</h3>
         <ul>
-          <li><b>Speed</b> — temporary movement boost.</li>
-          <li><b>Cloak</b> — clones ignore you briefly.</li>
-          <li><b>Shockwave</b> — pushes nearby clones back.</li>
-        </ul>
-      </div>
-      <div class="panel-block">
-        <h3>Tips</h3>
-        <ul>
-          <li>Plan your path — clones replay your exact steps.</li>
-          <li>Use corridors to funnel clones past you.</li>
-          <li>Save power-ups for emergencies.</li>
+          <li><b>Speed</b> — short sprint</li>
+          <li><b>Cloak</b> — clones ignore you briefly</li>
+          <li><b>Shock</b> — pushes nearby clones back</li>
         </ul>
       </div>
     </aside>
   </main>
 
-  <footer class="footer">
-    <small>Please give your honest FEEDBACKs.</small>
-  </footer>
+  <footer class="footer"><small>Built for demo </small></footer>
 
-  <!-- Audio (CDN samples). They will be played only after clicking Start. Replace URLs if you host locally. -->
-  <audio id="bgMusic" loop preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/11/02/audio_dfe97b58c8.mp3?filename=dark-ambience-123327.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="ambientSfx" loop preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2021/08/08/audio_ambient-1-65627.mp3?filename=ambient-wind-65627.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="footstep" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_2c2bd37f2b.mp3?filename=footstep-02-119264.mp3" type="audio/mpeg"></audio>
+  <!-- Audio placeholders (replace with your licensed/own files if desired) -->
+  <audio id="bgMusic" loop preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/11/02/audio_dfe97b58c8.mp3?filename=dark-ambience-123327.mp3" type="audio/mpeg"></audio>
   <audio id="spawnSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2021/08/08/audio_ef4f9f1b0a.mp3?filename=spawn-ef4f9f.mp3" type="audio/mpeg"></audio>
   <audio id="pickupSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/07/07/audio_d0f9ab3d3c.mp3?filename=pickup-773.mp3" type="audio/mpeg"></audio>
-  <audio id="shockSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/01/28/audio_1a3b6d2a5b.mp3?filename=shock-1a3b6d.mp3" type="audio/mpeg"></audio>
   <audio id="deathSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_13a2f2f5a4.mp3?filename=death-13a2f2.mp3" type="audio/mpeg"></audio>
-  <audio id="newRecordSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/07/07/audio_d0f9ab3d3c.mp3?filename=achievement.mp3" type="audio/mpeg"></audio>
 
   <script src="script.js"></script>
 </body>
