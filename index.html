@@ -3,45 +3,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Shadow Clone Escape — Polished Demo</title>
+  <title>Shadow Clone Escape — Ninja</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>Shadow Clone Escape</h1>
+    <h1 id="title">Shadow Clone Escape — Ninja</h1>
     <div class="top-controls">
       <button id="menuBtnHeader" class="small">Menu</button>
     </div>
   </header>
 
   <main class="layout">
-    <aside id="leftPanel" class="panel">
-      <div id="menu" class="panel-block">
-        <p class="big">Survive, escape, and outsmart your shadow.</p>
+    <aside class="panel left-panel">
+      <div id="menuPanel" class="panel-block">
+        <p class="big">Survive, escape, outmaneuver your shadow.</p>
         <div class="menu-row">
           <button id="startBtn">Start Run</button>
           <button id="tutorialBtn">Tutorial</button>
-          <button id="settingsBtn">Settings</button>
         </div>
         <p id="bestRecordText">Best: —</p>
       </div>
 
-      <div id="tutorial" class="panel-block panel-hidden">
+      <div id="tutorialPanel" class="panel-block panel-hidden">
         <h3>Tutorial</h3>
         <ul>
-          <li>Move: WASD / Arrow keys or on-screen D-pad (mobile)</li>
-          <li>Clones replay your recent movement; avoid them</li>
-          <li>Reach the glowing portal to clear the level</li>
+          <li>Move: WASD / Arrows (or on-screen D-pad)</li>
+          <li>Clones replay your path — avoid them</li>
+          <li>Enter the glowing portal to clear level</li>
         </ul>
-      </div>
-
-      <div id="settings" class="panel-block panel-hidden">
-        <h3>Settings</h3>
-        <label><input type="checkbox" id="musicToggle" checked> Music</label><br>
-        <label><input type="checkbox" id="sfxToggle" checked> SFX</label><br>
-        <label>Difficulty:
-          <input id="difficulty" type="range" min="0" max="2" step="1" value="1">
-        </label>
       </div>
     </aside>
 
@@ -50,21 +40,26 @@
         <canvas id="gameCanvas"></canvas>
         <canvas id="miniMap" class="minimap" aria-hidden="true"></canvas>
 
-        <div id="titleOverlay" class="titleOverlay">
-          <div class="titleCard">
-            <h2 id="titleGlow">Shadow Clone Escape</h2>
-            <p>Survive the maze. Your past becomes your hunter.</p>
-            <button id="startBtnOverlay">Start Run</button>
+        <div id="overlay" class="overlay">
+          <div id="titleCard" class="titleCard">
+            <h2>Shadow Clone Escape</h2>
+            <p>Play as the Ninja. Your past becomes your hunter.</p>
+            <div class="menu-row">
+              <button id="startBtnOverlay">Start Run</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div id="ui" class="hud panel-hidden">
+      <div id="hud" class="hud panel-hidden">
         <div class="hud-top">
-          <div id="status">Survive as long as you can</div>
+          <div id="status">Survive and find the portal</div>
           <div id="timer">Time: 0s</div>
-          <div id="powerupBox"></div>
           <div id="levelBox">Level: 1</div>
+        </div>
+        <div class="hud-mid">
+          <div id="powerupBox" class="powerup-box"></div>
+          <div id="notifArea" class="notif-area"></div>
         </div>
         <div class="hud-bottom">
           <button id="restartBtn" class="small" style="display:none;">Restart</button>
@@ -87,25 +82,38 @@
       </div>
     </section>
 
-    <aside id="rightPanel" class="panel">
+    <aside class="panel right-panel">
       <div class="panel-block">
         <h3>Power-ups</h3>
         <ul>
-          <li><b>Speed</b> — short sprint</li>
-          <li><b>Cloak</b> — clones ignore you briefly</li>
-          <li><b>Shock</b> — pushes nearby clones back</li>
+          <li><b>Speed</b> - Short sprint (faster steps)</li>
+          <li><b>Cloak</b> - Clones ignore you briefly</li>
+          <li><b>Shock</b> - Push nearby clones back</li>
         </ul>
       </div>
     </aside>
   </main>
 
-  <footer class="footer"><small>Built for demo </small></footer>
+  <div id="menuOverlay" class="menuOverlay hidden">
+    <div class="menuBox">
+      <h3 id="menuTitle">Paused</h3>
+      <div class="menu-row">
+        <button id="resumeBtn">Resume</button>
+        <button id="goMenuBtn">Main Menu</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Audio placeholders (replace with your licensed/own files if desired) -->
-  <audio id="bgMusic" loop preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/11/02/audio_dfe97b58c8.mp3?filename=dark-ambience-123327.mp3" type="audio/mpeg"></audio>
-  <audio id="spawnSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2021/08/08/audio_ef4f9f1b0a.mp3?filename=spawn-ef4f9f.mp3" type="audio/mpeg"></audio>
-  <audio id="pickupSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/07/07/audio_d0f9ab3d3c.mp3?filename=pickup-773.mp3" type="audio/mpeg"></audio>
-  <audio id="deathSfx" preload="auto"><source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_13a2f2f5a4.mp3?filename=death-13a2f2.mp3" type="audio/mpeg"></audio>
+  <footer class="footer">
+    <small>Demo — Host on GitHub Pages. Replace assets with your own for release.</small>
+  </footer>
+
+  <!-- Audio placeholders: replace with your own licensed files in /assets -->
+  <audio id="bgMusic" loop preload="auto"><source src="assets/bg_music.mp3" type="audio/mpeg"></audio>
+  <audio id="sfxSpawn" preload="auto"><source src="assets/spawn.wav" type="audio/wav"></audio>
+  <audio id="sfxPickup" preload="auto"><source src="assets/powerup.wav" type="audio/wav"></audio>
+  <audio id="sfxPortal" preload="auto"><source src="assets/portal.wav" type="audio/wav"></audio>
+  <audio id="sfxDeath" preload="auto"><source src="assets/death.wav" type="audio/wav"></audio>
 
   <script src="script.js"></script>
 </body>
