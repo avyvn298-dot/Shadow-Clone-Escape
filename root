@@ -1,0 +1,25 @@
+/index.html
+/style.css
+/script.js
+/assets/
+  characters/
+    ninja_spritesheet.png
+    clones_spritesheet.png
+    portal_spritesheet.png
+  powerups/
+    powerup_speed.png
+    powerup_cloak.png
+    powerup_clone.png
+  obstacles/
+    obstacles_spritesheet.png
+  background/
+    bg_layer1.png
+    bg_layer2.png
+    bg_layer3.png
+    bg_layer4.png
+  audio/
+    bg_music_loop.mp3
+    sfx_jump.wav
+    sfx_clone.wav
+    sfx_powerup.wav
+    sfx_portal.wav
