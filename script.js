@@ -32,18 +32,49 @@ function loadAssets(callback) {
 }
 
 // === GAME START === //
-loadAssets(() => {
-  console.log("✅ All available assets loaded:", loadedAssets);
-  startGame(); // Call your main game function here
-});
-
-// === Example Game Loop (replace with your logic) === //
 function startGame() {
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Ninja (center left)
+    if (loadedAssets.ninja) {
+      ctx.drawImage(
+        loadedAssets.ninja,
+        0, 0, 64, 64,        // source (first frame of sheet)
+        canvas.width / 2 - 200, canvas.height / 2 - 32, // destination pos
+        64, 64               // destination size
+      );
+    }
+
+    // Draw Clone (center)
+    if (loadedAssets.clone) {
+      ctx.drawImage(
+        loadedAssets.clone,
+        0, 0, 64, 64,
+        canvas.width / 2 - 32, canvas.height / 2 - 32,
+        64, 64
+      );
+    }
+
+    // Draw Portal (center right)
+    if (loadedAssets.portal) {
+      ctx.drawImage(
+        loadedAssets.portal,
+        0, 0, 64, 64,
+        canvas.width / 2 + 150, canvas.height / 2 - 32,
+        64, 64
+      );
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
 
     // Example: draw ninja sprite in middle of screen
     if (loadedAssets.ninja) {
