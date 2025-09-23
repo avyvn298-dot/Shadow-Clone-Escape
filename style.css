@@ -1,31 +1,71 @@
+/* style.css — Polished AAA UI for Shadow Clone Escape */
 :root{
-  --bg:#0b0b0b; --panel:#111; --muted:#9aa; --accent:#66ff99; --card:#141414;
+  --bg1:#05060a; --bg2:#0b0b0f;
+  --glass: rgba(255,255,255,0.03);
+  --accent: #66ff99; --accent2: #4ef0b8;
+  --muted:#9aa; --danger:#ff6b6b;
+  --card:#0f1115;
+  --shadow: 0 14px 40px rgba(0,0,0,0.6);
+  --radius: 12px;
+  --mono: "Roboto Mono", monospace;
 }
+
+/* Base */
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#050505,#0b0b0b);color:#e9eef6}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:40}
-.card{background:var(--card);padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);width:min(880px,92%);text-align:center}
-.card h1{margin:0 0 6px;font-size:28px}
-.card .sub{color:var(--muted);margin-bottom:18px}
-.btnRow{display:flex;gap:12px;justify-content:center}
-button{cursor:pointer;border:0;padding:10px 16px;border-radius:10px;font-weight:600}
-.primary{background:linear-gradient(90deg,#3bffb4,#66ff99);color:#042;box-shadow:0 8px 18px rgba(80,255,170,0.07)}
-.muted{background:#1a1a1a;color:var(--muted)}
-.small{background:#222;color:#ddd;padding:6px 10px}
-.panel-hidden{display:none}
-#gameRoot{display:flex;flex-direction:column;align-items:center;padding:18px 12px 80px}
-canvas#gameCanvas{background:#060606;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,0.7);max-width:100%;height:auto;border:2px solid rgba(255,255,255,0.02)}
-.hud{display:flex;justify-content:space-between;gap:10px;margin-top:12px;width:min(1024px,95%);align-items:center}
-.hud .left,.hud .center,.hud .right{display:flex;flex-direction:column;gap:6px}
-#miniMapWrap{margin-top:10px}
-.leaderboard{list-style:none;padding:0;margin:0;max-height:120px;overflow:auto;color:var(--muted)}
-.notifArea{position:fixed;left:20px;bottom:20px;z-index:60}
-.notif{background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:8px;margin-top:8px;color:#fff}
-.mobile{position:fixed;left:16px;bottom:16px;display:flex;gap:14px;z-index:50}
-.hidden{display:none}
-.dpad button{width:56px;height:56px;border-radius:10px;background:#111;color:#ddd;font-weight:700;border:1px solid rgba(255,255,255,0.03)}
-.power{background:linear-gradient(180deg,#ffb86b,#ff8a6b);padding:10px 14px}
-@media (max-width:720px){
-  .overlay .card{width:92%}
-  .hud{flex-direction:column;align-items:flex-start}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#e8eef8}
+button{cursor:pointer;border:0;padding:8px 12px;border-radius:10px;font-weight:700}
+
+/* Title overlay */
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200}
+.titleCard{width:min(920px,94%);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:16px;padding:20px;box-shadow:var(--shadow);backdrop-filter: blur(6px)}
+.logo h1{margin:0;font-size:36px;letter-spacing:0.6px}
+.logo .tag{color:var(--muted);margin-top:6px}
+.previewRow{display:flex;justify-content:center;margin:14px 0}
+.controls{display:flex;gap:14px;justify-content:center;margin-bottom:8px}
+.btn{background:var(--glass);color:#fff;padding:10px 14px;border-radius:12px}
+.btn.large{padding:12px 20px;font-size:18px}
+.btn.primary{background:linear-gradient(90deg,var(--accent2),var(--accent));color:#042;box-shadow:0 8px 28px rgba(102,255,153,0.06)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted)}
+.link{background:transparent;color:var(--muted);text-decoration:underline;border-radius:6px;padding:6px 8px}
+.metaRow{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.preloader{margin-top:10px}
+.progressBar{height:8px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+.progressBar > div{height:100%;width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 280ms linear}
+
+/* Stage layout */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;opacity:0.98}
+.brand{font-weight:800}
+.stage{display:flex;gap:18px;align-items:flex-start;justify-content:center;padding:0 18px 24px}
+canvas#gameCanvas{border-radius:12px;background:linear-gradient(180deg,#020203,#071011);box-shadow:var(--shadow);max-width:100%;height:auto;border:2px solid rgba(255,255,255,0.02)}
+
+/* Side panel */
+.sidePanel{width:280px;display:flex;flex-direction:column;gap:12px}
+.panelCard{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.55)}
+.hudTitle{font-weight:800}
+.status{font-weight:700;color:var(--muted);margin-top:6px}
+.timer{font-family:var(--mono);font-weight:700;margin-top:8px}
+.panelButtons{display:flex;gap:8px;margin-top:10px}
+.powerupBox{min-height:24px;margin-top:4px;font-weight:700;color:var(--accent)}
+
+.leaderboard{list-style:none;padding:6px;margin:0;color:var(--muted);max-height:160px;overflow:auto}
+.leaderboard li{padding:6px 4px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+
+.smallText{font-size:12px;color:var(--muted)}
+
+.mobile{position:fixed;left:16px;bottom:16px;display:flex;gap:14px;z-index:80}
+.dpad button{width:56px;height:56px;border-radius:10px;background:#111;color:#ddd;font-weight:800;border:1px solid rgba(255,255,255,0.03);font-size:18px}
+.power{background:linear-gradient(180deg,#ffb86b,#ff8a6b);padding:10px 14px;border-radius:10px}
+
+/* Modal */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:210}
+.modalCard{width:min(760px,92%);background:var(--card);padding:18px;border-radius:12px;box-shadow:var(--shadow)}
+
+.notifArea{position:fixed;left:20px;bottom:20px;z-index:250}
+.notif{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));padding:8px 12px;border-radius:8px;margin-top:8px;color:#fff;backdrop-filter: blur(4px)}
+
+/* Responsive */
+@media (max-width:900px){
+  .stage{flex-direction:column;align-items:center}
+  .sidePanel{width:92%;max-width:400px}
+  .mobile{left:10px;bottom:10px}
 }
