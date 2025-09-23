@@ -23,10 +23,42 @@ const ASSET = {
   portal: "assets/portal.wav",
   death: "assets/death.wav",
   // optional background layers (you may add bg_layer1..4)
-  bg1: "assets/bg_layer1.png",
+  bg1: "background.png",
   bg2: "assets/bg_layer2.png",
   bg3: "assets/bg_layer3.png"
 };
+// Buttons
+  const startBtn = document.getElementById("startBtn");
+  const tutorialBtn = document.getElementById("tutorialBtn");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const closeTutorial = document.getElementById("closeTutorial");
+  const closeSettings = document.getElementById("closeSettings");
+
+  const menu = document.getElementById("menu");
+  const tutorial = document.getElementById("tutorial");
+  const settings = document.getElementById("settings");
+
+  startBtn.addEventListener("click", () => {
+    menu.style.display = "none";
+    startGame();
+  });
+
+  tutorialBtn.addEventListener("click", () => {
+    tutorial.classList.remove("hidden");
+  });
+
+  closeTutorial.addEventListener("click", () => {
+    tutorial.classList.add("hidden");
+  });
+
+  settingsBtn.addEventListener("click", () => {
+    settings.classList.remove("hidden");
+  });
+
+  closeSettings.addEventListener("click", () => {
+    settings.classList.add("hidden");
+  });
+
 
 /* ========================= DOM & CANVAS ========================= */
 const previewCanvas = document.getElementById('previewCanvas');
