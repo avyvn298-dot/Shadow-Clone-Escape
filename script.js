@@ -2,7 +2,7 @@
 const assets = {
   ninja: "assets/ninja_spritesheet.png",
   clone: "assets/clones_spritesheet.png",
-  portal: "assets/portal_spritesheet.png"
+  portal: "assets/portal.png"
 };
 
 const loadedAssets = {};
