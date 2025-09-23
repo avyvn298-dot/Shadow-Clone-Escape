@@ -3,6 +3,43 @@
      - "assets/..." then fallback to root (e.g. "ninja_spritesheet.png")
    Adjust ASSET_CANDIDATES top section if your filenames or locations differ.
 */
+// === GLOBAL FLAGS ===
+let gameRunning = false;
+
+// === GAME LOOP ===
+function gameLoop() {
+  if (!gameRunning) return; // stop if game not running
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // draw maze, player, clones, portal etc.
+  drawMaze();
+  drawNinja();
+  drawClones();
+  drawPortal();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// === START GAME FUNCTION ===
+function startGame() {
+  console.log("✅ Game Started");
+  gameRunning = true;
+
+  // reset player state
+  ninja.x = 100;
+  ninja.y = 100;
+
+  // play music
+  if (sounds.bgMusic.paused) {
+    sounds.bgMusic.play();
+  }
+
+  gameLoop(); // kick off loop
+}
+
+// === BUTTON LISTENER ===
+document.getElementById("startBtn").addEventListener("click", startGame);
 
 /* ========================= ASSET PATHS (edit if needed) ======================= */
 const ASSET_CANDIDATES = {
