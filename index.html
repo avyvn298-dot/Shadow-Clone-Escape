@@ -2,118 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>Shadow Clone Escape — AAA Build</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Shadow Clone Escape — Ninja</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1 id="title">Shadow Clone Escape — Ninja</h1>
-    <div class="top-controls">
-      <button id="menuBtnHeader" class="small">Menu</button>
-    </div>
-  </header>
-
-  <main class="layout">
-    <aside class="panel left-panel">
-      <div id="menuPanel" class="panel-block">
-        <p class="big">Survive, escape, outmaneuver your shadow.</p>
-        <div class="menu-row">
-          <button id="startBtn">Start Run</button>
-          <button id="tutorialBtn">Tutorial</button>
-        </div>
-        <p id="bestRecordText">Best: —</p>
+  <div id="titleOverlay" class="overlay">
+    <div class="card">
+      <h1>⚔️ Shadow Clone Escape</h1>
+      <p class="sub">Endless ninja maze — survive as long as you can</p>
+      <div class="btnRow">
+        <button id="startBtn" class="primary">Start Run</button>
+        <button id="tutorialBtn" class="muted">Tutorial</button>
+        <button id="settingsBtn" class="muted">Settings</button>
       </div>
-
-      <div id="tutorialPanel" class="panel-block panel-hidden">
-        <h3>Tutorial</h3>
-        <ul>
-          <li>Move: WASD / Arrows (or on-screen D-pad)</li>
-          <li>Clones replay your path — avoid them</li>
-          <li>Enter the glowing portal to clear level</li>
-        </ul>
-      </div>
-    </aside>
-
-    <section class="panel center-panel">
-      <div id="canvasWrap">
-        <canvas id="gameCanvas"></canvas>
-        <canvas id="miniMap" class="minimap" aria-hidden="true"></canvas>
-
-        <div id="overlay" class="overlay">
-          <div id="titleCard" class="titleCard">
-            <h2>Shadow Clone Escape</h2>
-            <p>Play as the Ninja. Your past becomes your hunter.</p>
-            <div class="menu-row">
-              <button id="startBtnOverlay">Start Run</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="hud" class="hud panel-hidden">
-        <div class="hud-top">
-          <div id="status">Survive and find the portal</div>
-          <div id="timer">Time: 0s</div>
-          <div id="levelBox">Level: 1</div>
-        </div>
-        <div class="hud-mid">
-          <div id="powerupBox" class="powerup-box"></div>
-          <div id="notifArea" class="notif-area"></div>
-        </div>
-        <div class="hud-bottom">
-          <button id="restartBtn" class="small" style="display:none;">Restart</button>
-          <button id="menuBtn" class="small" style="display:none;">Back to Menu</button>
-        </div>
-      </div>
-
-      <div id="mobileControls" class="mobile-controls hidden" aria-hidden="true">
-        <div id="dpad" class="dpad">
-          <button data-dir="up" class="dpad-btn up">▲</button>
-          <div class="dpad-row">
-            <button data-dir="left" class="dpad-btn left">◀</button>
-            <button data-dir="down" class="dpad-btn down">▼</button>
-            <button data-dir="right" class="dpad-btn right">▶</button>
-          </div>
-        </div>
-        <div class="mobile-actions">
-          <button id="btnPower" class="small">Power</button>
-        </div>
-      </div>
-    </section>
-
-    <aside class="panel right-panel">
-      <div class="panel-block">
-        <h3>Power-ups</h3>
-        <ul>
-          <li><b>Speed</b> - Short sprint (faster steps)</li>
-          <li><b>Cloak</b> - Clones ignore you briefly</li>
-          <li><b>Shock</b> - Push nearby clones back</li>
-        </ul>
-      </div>
-    </aside>
-  </main>
-
-  <div id="menuOverlay" class="menuOverlay hidden">
-    <div class="menuBox">
-      <h3 id="menuTitle">Paused</h3>
-      <div class="menu-row">
-        <button id="resumeBtn">Resume</button>
-        <button id="goMenuBtn">Main Menu</button>
-      </div>
+      <small class="hint">Click Start to enable audio on your browser</small>
     </div>
   </div>
 
-  <footer class="footer">
-    <small>Demo — Host on GitHub Pages. Replace assets with your own for release.</small>
-  </footer>
+  <div id="menu" class="panel">
+    <header class="panelHeader">
+      <button id="menuBtnHeader" class="icon">☰</button>
+      <div class="title">Shadow Clone Escape</div>
+      <div class="spacer"></div>
+      <button id="menuBtn" class="icon">⤴</button>
+    </header>
+  </div>
 
-  <!-- Audio placeholders: replace with your own licensed files in /assets -->
-  <audio id="bgMusic" loop preload="auto"><source src="assets/bg_music.mp3" type="audio/mpeg"></audio>
-  <audio id="sfxSpawn" preload="auto"><source src="assets/spawn.wav" type="audio/wav"></audio>
-  <audio id="sfxPickup" preload="auto"><source src="assets/powerup.wav" type="audio/wav"></audio>
-  <audio id="sfxPortal" preload="auto"><source src="assets/portal.wav" type="audio/wav"></audio>
-  <audio id="sfxDeath" preload="auto"><source src="assets/death.wav" type="audio/wav"></audio>
+  <main id="gameRoot">
+    <canvas id="gameCanvas" width="960" height="640"></canvas>
+
+    <div id="ui" class="ui panel-hidden">
+      <div id="hud" class="hud">
+        <div class="left">
+          <div id="bestRecordText">Best: —</div>
+          <div id="status">Ready</div>
+        </div>
+        <div class="center">
+          <div id="powerupBox"></div>
+        </div>
+        <div class="right">
+          <div id="timer">Time: 0s</div>
+          <button id="menuBtnSmall" class="small">Menu</button>
+        </div>
+      </div>
+
+      <div class="controlsRow">
+        <div id="miniMapWrap">
+          <canvas id="miniMap" width="140" height="80"></canvas>
+        </div>
+
+        <div id="buttonsRight">
+          <button id="restartBtn" class="muted" style="display:none">Restart</button>
+          <button id="settingsOpen" class="muted">Settings</button>
+          <ul id="leaderboardList" class="leaderboard"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="notifArea" class="notifArea"></div>
+
+    <!-- Mobile D-pad -->
+    <div id="mobileControls" class="mobile hidden">
+      <div id="dpad" class="dpad">
+        <button data-dir="up">▲</button>
+        <div class="row">
+          <button data-dir="left">◀</button>
+          <button data-dir="down">▼</button>
+          <button data-dir="right">▶</button>
+        </div>
+      </div>
+      <div class="rightControls">
+        <button id="btnPower" class="power">Shock</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Audio files are optional, loader tries fallback if missing -->
+  <audio id="bgMusic" preload="auto" loop>
+    <source src="assets/bg_music_loop.wav" type="audio/wav" />
+  </audio>
+  <audio id="spawnSfx" preload="auto"><source src="assets/spawn.wav" /></audio>
+  <audio id="pickupSfx" preload="auto"><source src="assets/powerup.wav" /></audio>
+  <audio id="portalSfx" preload="auto"><source src="assets/portal.wav" /></audio>
+  <audio id="deathSfx" preload="auto"><source src="assets/death.wav" /></audio>
 
   <script src="script.js"></script>
 </body>
