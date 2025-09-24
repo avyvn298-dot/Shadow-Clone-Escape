@@ -312,7 +312,27 @@ const levels = [
 
 // Track current level
 let currentLevel = 0;
-let maze = levels[currentLevel];
+
+function parseLevel(level) {
+  const rows = level.length;
+  const cols = level[0].length;
+  const grid = Array.from({length: rows}, (_, y) =>
+    Array.from({length: cols}, (_, x) => {
+      const ch = level[y][x];
+      if (ch === '#') return 1; // wall
+      if (ch === '.') return 0; // path
+      if (ch === 'P') {         // portal
+        PORTAL = { x, y };
+        return 0;
+      }
+      return 0;
+    })
+  );
+  return grid;
+}
+
+let maze = parseLevel(levels[currentLevel]);
+
 
 /* cache maze to offscreen canvas for performance */
 function cacheMaze(){
