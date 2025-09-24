@@ -67,10 +67,14 @@
         <label>Difficulty: <input id="difficulty" type="range" min="1" max="3" step="1"></label>
       </div>
       <div class="modalBtns">
-        <button id="closeSettings" class="btn primary small">Save & Close</button>
-      </div>
-    </div>
-  </div>
+       <button id="settingsBtn" onclick="openSettings()">⚙️ Settings</button>
+
+<div id="settingsMenu">
+  <h2>Game Settings</h2>
+  <label>Music Volume <input type="range" id="musicVolume" min="0" max="1" step="0.1"></label>
+  <label>SFX Volume <input type="range" id="sfxVolume" min="0" max="1" step="0.1"></label>
+  <button onclick="closeSettings()">Close</button>
+</div>
 
   <!-- Game root -->
   <main id="gameRoot">
