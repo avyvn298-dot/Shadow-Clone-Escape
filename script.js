@@ -1,25 +1,20 @@
-/* script.js — Shadow Clone Escape (Full AAA-Polish)
-   - Comprehensive single-file game logic
-   - Responsive canvas, parallax background, joystick for mobile
-   - Spritesheet-correct drawing, clones, powerups, portal transitions
-   - Audio manager with SFX & music (graceful fallback if missing)
-   - Local leaderboard, settings persistence, UI wiring
-   - Paste this into script.js in your repo root
+/* script.js — Shadow Clone Escape (Full AAA)
+   Paste into script.js
+   - Works with the provided index.html and style.css
+   - Configure ASSETS paths below if you used different filenames or directories
 */
 
-/* ===========================
-   ASSET CONFIG - EDIT PATHS HERE
-   =========================== */
-const ASSET = {
-  ninja: "assets/ninja_spritesheet.png",          // e.g. 1536x534 -> 4 cols x 1 row
-  clones: "assets/clones_spritesheet.png",        // e.g. 1060x433 -> 3 cols x 1 row
-  portal: "assets/portal.png",                    // portal asset
-  background: "background.png",                   // large background
-  bgLayers: [                                      // optional parallax layers (higher index = closer)
-    "assets/bg_layer1.png",
-    "assets/bg_layer2.png",
-    "assets/bg_layer3.png"
-  ],
+/* =========================
+   ASSET CONFIG — edit here
+   ========================= */
+const ASSETS = {
+  ninja: "assets/ninja_spritesheet.png",       // your ninja spritesheet (e.g. 1536x534)
+  clones: "assets/clones_spritesheet.png",     // clones spritesheet (e.g. 1060x433)
+  portal: "assets/portal.png",                 // portal sprite (e.g. 361x316)
+  background: "background.png",                // large background image (optional)
+  bgLayers: ["assets/bg_layer1.png","assets/bg_layer2.png","assets/bg_layer3.png"],
+
+  // audio (optional) - browsers require user gesture to start playback
   bgMusic: "assets/bg_music_loop.wav",
   spawnSfx: "assets/spawn.wav",
   pickupSfx: "assets/powerup.wav",
@@ -27,89 +22,82 @@ const ASSET = {
   deathSfx: "assets/death.wav"
 };
 
-/* ===========================
-   DOM / Canvas / UI references
-   =========================== */
-const CANVAS = document.getElementById('gameCanvas');
-const ctx = CANVAS.getContext('2d');
+/* =========================
+   DOM References (match index.html)
+   ========================= */
+const preloaderEl        = document.getElementById('preloader');
+const startMenuEl        = document.getElementById('startMenu');
+const tutorialMenuEl     = document.getElementById('tutorialMenu');
+const settingsMenuEl     = document.getElementById('settingsMenu');
+const creditsMenuEl      = document.getElementById('creditsMenu');
+const pauseMenuEl        = document.getElementById('pauseMenu');
+const gameOverMenuEl     = document.getElementById('gameOverMenu');
+const victoryMenuEl      = document.getElementById('victoryMenu');
 
-const MINIMAP = document.getElementById('minimap');
-const miniCtx = MINIMAP.getContext('2d');
+const startBtn           = document.getElementById('startBtn');
+const tutorialBtn        = document.getElementById('tutorialBtn');
+const settingsBtn        = document.getElementById('settingsBtn');
+const creditsBtn         = document.getElementById('creditsBtn');
 
-const START_SCREEN = document.getElementById('start-screen');
-const START_BTN = document.getElementById('start-btn');
-const LEVEL_BTN = document.getElementById('level-btn');
-const SETTINGS_BTN = document.getElementById('settings-btn');
-const TUTORIAL_BTN = document.getElementById('tutorial-btn');
+const tutorialCloseBtns  = Array.from(document.querySelectorAll('#tutorialMenu .closeBtn'));
+const settingsCloseBtns  = Array.from(document.querySelectorAll('#settingsMenu .closeBtn'));
+const creditsCloseBtns   = Array.from(document.querySelectorAll('#creditsMenu .closeBtn'));
 
-const LEVEL_SCREEN = document.getElementById('level-screen');
-const LEVEL_BUTTONS = document.getElementById('level-buttons');
-const BACK_TO_START = document.getElementById('back-to-start');
+const resumeBtn          = document.getElementById('resumeBtn');
+const restartBtn         = document.getElementById('restartBtn');
+const quitBtn            = document.getElementById('quitBtn');
 
-const SETTINGS_SCREEN = document.getElementById('settings-screen');
-const TOGGLE_MUSIC = document.getElementById('toggle-music');
-const TOGGLE_SFX = document.getElementById('toggle-sfx');
-const DIFFICULTY_SELECT = document.getElementById('difficulty');
-const BACK_TO_START_SETTINGS = document.getElementById('back-to-start-settings');
+const retryBtn           = document.getElementById('retryBtn');
+const quitToMenuBtn      = document.getElementById('quitToMenuBtn');
+const nextLevelBtn       = document.getElementById('nextLevelBtn');
+const quitToMenuBtn2     = document.getElementById('quitToMenuBtn2');
 
-const TUTORIAL_SCREEN = document.getElementById('tutorial-screen');
-const CLOSE_TUTORIAL = document.getElementById('close-tutorial');
+const musicVolumeInput   = document.getElementById('musicVolume');
+const sfxVolumeInput     = document.getElementById('sfxVolume');
+const difficultySelect   = document.getElementById('difficulty');
 
-const GAME_CONTAINER = document.getElementById('game-container');
-const JOYSTICK_CONTAINER = document.getElementById('joystick-container');
-const JOYSTICK = document.getElementById('joystick');
+const gameContainerEl    = document.getElementById('gameContainer');
+const canvasEl           = document.getElementById('gameCanvas');
+const minimapEl          = document.getElementById('minimap');
 
-const PAUSE_OVERLAY = document.getElementById('pause-overlay');
-const RESUME_BTN = document.getElementById('resume-btn');
-const RESTART_BTN = document.getElementById('restart-btn');
-const QUIT_BTN = document.getElementById('quit-btn');
+const joystickContainer  = document.getElementById('joystickContainer');
+const joystickEl         = document.getElementById('joystick');
 
-const PROGRESS_FILL = document.getElementById('progressFill');
-const PROGRESS_TEXT = document.getElementById('progressText');
+/* notification area — create if not present */
+let notifArea = document.getElementById('notifArea');
+if(!notifArea){
+  notifArea = document.createElement('div'); notifArea.id = 'notifArea'; document.body.appendChild(notifArea);
+}
 
-const POWERUP_BOX = document.getElementById('powerupBox');
-const TIMER_TEXT = document.getElementById('timer');
-const STATUS_TEXT = document.getElementById('status');
-const BEST_RECORD_TEXT = document.getElementById('bestRecordText');
+/* fallback elements used by earlier code (safe guards) */
+const hudStatus = document.getElementById('status') || null;
+const bestRecordText = document.getElementById('bestRecordText') || null;
 
-const RESTART_BTN_HUD = document.getElementById('restartBtn');
-const PAUSE_BTN_HUD = document.getElementById('pauseBtn');
-const BTN_POWER = document.getElementById('btnPower');
-
-const LEADERBOARD_LIST = document.getElementById('leaderboardList');
-const CLEAR_LEADERBOARD = document.getElementById('clearLeaderboard');
-const NOTIF_AREA = document.getElementById('notifArea');
-
-const PREVIEW_CANVAS = document.getElementById('previewCanvas');
-const PREVIEW_CTX = PREVIEW_CANVAS?.getContext('2d');
-
-/* ===========================
-   STORAGE KEYS & SETTINGS
-   =========================== */
-const STORAGE_KEYS = {
-  SETTINGS: 'shadow_clone_settings',
-  BEST: 'shadow_clone_best',
-  LEADER: 'shadow_clone_leader'
-};
+/* =========================
+   Storage keys & settings
+   ========================= */
+const KEY_SETTINGS = 'sce_settings_v1';
+const KEY_BEST = 'sce_best_v1';
+const KEY_LEADER = 'sce_leader_v1';
 
 let SETTINGS = {
   music: true,
-  sfx: true,
-  musicVol: 0.45,
-  sfxVol: 1.0,
-  difficulty: 1,   // 1-normal, 2-hard, 3-extreme maybe
-  joystickSensitivity: 0.7,
-  controls: { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', shock: ' ' }
+  musicVolume: 0.45,
+  sfxVolume: 1.0,
+  difficulty: 'normal', // 'easy', 'normal', 'hard', 'nightmare'
+  joystickSensitivity: 0.8
 };
 try {
-  const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS));
-  if (s) SETTINGS = { ...SETTINGS, ...s };
-} catch (e) { console.warn('Settings parse failed', e); }
+  const s = JSON.parse(localStorage.getItem(KEY_SETTINGS));
+  if(s) SETTINGS = { ...SETTINGS, ...s };
+} catch(e){ console.warn('settings parse error', e); }
 
-/* ===========================
-   RUNTIME STATE
-   =========================== */
-let cols = 19, rows = 19, tileSize = 30;
+/* =========================
+   Runtime state
+   ========================= */
+let ctx, miniCtx;
+let pixelRatio = window.devicePixelRatio || 1;
+let cols = 19, rows = 19, tileSize = 28;
 let maze = [];
 let mazeCache = null;
 let player = null;
@@ -117,82 +105,95 @@ let movesHistory = [];
 let clones = [];
 let powerups = [];
 let particles = [];
-let frame = 0;
+let frameCount = 0;
 let running = false;
 let paused = false;
 let startTime = 0;
-let cloneInterval = 300;
+let cloneIntervalFrames = 300;
 let activePower = null;
 let PORTAL = null;
-let currentLevelIndex = 0;
+let currentLevel = 0;
 
-/* ===========================
-   LEVELS (progression)
-   =========================== */
+/* Levels (progression) */
 const LEVELS = [
-  { name: "Novice Shadow", scale: 1.0, cloneSpeed: 1.0, powerupRate: 0.025 },
-  { name: "Wandering Echo", scale: 1.12, cloneSpeed: 1.1, powerupRate: 0.02 },
-  { name: "Night Stalker", scale: 1.25, cloneSpeed: 1.2, powerupRate: 0.017 },
-  { name: "Spectral Onslaught", scale: 1.4, cloneSpeed: 1.35, powerupRate: 0.013 },
-  { name: "Ninja's Dread", scale: 1.6, cloneSpeed: 1.6, powerupRate: 0.01 },
-  { name: "Endless", scale: 1.85, cloneSpeed: 2.0, powerupRate: 0.007 }
+  { name:'Novice Shadow', scale:1.0, cloneRate:0.02, cloneBaseSpeed:1.0 },
+  { name:'Wandering Echo', scale:1.12, cloneRate:0.025, cloneBaseSpeed:1.08 },
+  { name:'Night Stalker', scale:1.25, cloneRate:0.028, cloneBaseSpeed:1.18 },
+  { name:'Spectral Onslaught', scale:1.45, cloneRate:0.032, cloneBaseSpeed:1.35 },
+  { name:'Ninja\'s Dread', scale:1.75, cloneRate:0.038, cloneBaseSpeed:1.6 },
+  { name:'Endless', scale:2.2, cloneRate:0.045, cloneBaseSpeed:2.0 }
 ];
 
-/* ===========================
-   ASSET HOLDERS
-   =========================== */
-const IMG = { ninja: null, clones: null, portal: null, background: null, bgLayers: [] };
-const AUDIO = { bg: null, spawn: null, pickup: null, portal: null, death: null };
+/* =========================
+   Assets containers
+   ========================= */
+const IMG = { ninja:null, clones:null, portal:null, background:null, bgLayers:[] };
+const AUDIO = { bg:null, spawn:null, pickup:null, portal:null, death:null };
 
-/* Sprite meta (update after load) */
-const SPRITE = {
-  ninja: { cols: 4, rows: 1, frameW: 384, frameH: 534 },
-  clones: { cols: 3, rows: 1, frameW: 353, frameH: 433 },
-  portal: { cols: 1, rows: 1, frameW: 361, frameH: 316 }
+/* Sprite metadata — will adjust automatically after load */
+const SPRITES = {
+  ninja: { cols:4, rows:1, frameW:0, frameH:0 },   // user sprite: 1536x534 -> cols 4
+  clones: { cols:3, rows:1, frameW:0, frameH:0 },  // user: 1060x433 -> cols 3
+  portal: { cols:1, rows:1, frameW:0, frameH:0 }
 };
 
-/* ===========================
-   UTILITY FUNCTIONS
-   =========================== */
-function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
-function nowSec(){ return Math.floor((Date.now()-startTime)/1000); }
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-function safePlay(audio, vol=1){ if(!audio) return; try{ audio.volume = vol; audio.currentTime = 0; audio.play().catch(()=>{}); }catch(e){} }
+/* =========================
+   Utility helpers
+   ========================= */
+const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+const randInt = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
+const shuffle = (arr)=>{ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]] } return arr; };
+const nowSec = ()=> Math.floor((Date.now()-startTime)/1000);
 
-/* ===========================
-   LOADER (images + audio)
-   =========================== */
-function loadImage(src){ return new Promise(res=>{ if(!src) return res(null); const i=new Image(); i.onload=()=>res(i); i.onerror=()=>{console.warn('Image failed',src);res(null);} ; i.src=src; }); }
-function loadAudio(src){ return new Promise(res=>{ if(!src) return res(null); try{ const a=new Audio(); a.addEventListener('canplaythrough', ()=>res(a), {once:true}); a.addEventListener('error', ()=>{console.warn('Audio failed',src); res(null);}, {once:true}); a.src = src; }catch(e){ console.warn('Audio load exception', e); res(null); } }); }
+function saveSettings(){
+  try{ localStorage.setItem(KEY_SETTINGS, JSON.stringify(SETTINGS)); }catch(e){ console.warn('save settings failed', e); }
+}
 
-async function preloadAssets(showProgress=true){
-  // tasks array depending on provided asset paths
+/* =========================
+   Loader (images & audio)
+   ========================= */
+function loadImage(src){
+  return new Promise(res=>{
+    if(!src){ res(null); return; }
+    const i = new Image();
+    i.onload = ()=> res(i);
+    i.onerror = ()=> { console.warn('image failed', src); res(null); };
+    i.src = src;
+  });
+}
+function loadAudio(src){
+  return new Promise(res=>{
+    if(!src){ res(null); return; }
+    try{
+      const a = new Audio();
+      a.addEventListener('canplaythrough', ()=>res(a), {once:true});
+      a.addEventListener('error', ()=>{ console.warn('audio failed', src); res(null); }, {once:true});
+      a.src = src;
+    }catch(e){ console.warn('audio exception', e); res(null); }
+  });
+}
+
+async function preloadAll(showPreloader = true){
+  if(showPreloader && preloaderEl) preloaderEl.style.display = 'flex';
   const tasks = [
-    {type:'img', key:'ninja', path:ASSET.ninja},
-    {type:'img', key:'clones', path:ASSET.clones},
-    {type:'img', key:'portal', path:ASSET.portal},
-    {type:'img', key:'background', path:ASSET.background},
-    {type:'img', key:'bg1', path:ASSET.bgLayers?.[0]},
-    {type:'img', key:'bg2', path:ASSET.bgLayers?.[1]},
-    {type:'img', key:'bg3', path:ASSET.bgLayers?.[2]},
-    {type:'audio', key:'bg', path:ASSET.bgMusic},
-    {type:'audio', key:'spawn', path:ASSET.spawnSfx},
-    {type:'audio', key:'pickup', path:ASSET.pickupSfx},
-    {type:'audio', key:'portal', path:ASSET.portalSfx},
-    {type:'audio', key:'death', path:ASSET.deathSfx}
+    {type:'img', key:'ninja', path:ASSETS.ninja},
+    {type:'img', key:'clones', path:ASSETS.clones},
+    {type:'img', key:'portal', path:ASSETS.portal},
+    {type:'img', key:'background', path:ASSETS.background},
+    {type:'img', key:'bg1', path:ASSETS.bgLayers?.[0]},
+    {type:'img', key:'bg2', path:ASSETS.bgLayers?.[1]},
+    {type:'img', key:'bg3', path:ASSETS.bgLayers?.[2]},
+    {type:'audio', key:'bg', path:ASSETS.bgMusic},
+    {type:'audio', key:'spawn', path:ASSETS.spawnSfx},
+    {type:'audio', key:'pickup', path:ASSETS.pickupSfx},
+    {type:'audio', key:'portal', path:ASSETS.portalSfx},
+    {type:'audio', key:'death', path:ASSETS.deathSfx}
   ];
   let done = 0;
   const total = tasks.filter(t=>t.path).length || tasks.length;
 
-  function setProgress(pct, text){
-    if(!showProgress) return;
-    if(PROGRESS_FILL) PROGRESS_FILL.style.width = pct + '%';
-    if(PROGRESS_TEXT) PROGRESS_TEXT.textContent = text || `Loading ${pct}%`;
-  }
-
   for(const t of tasks){
-    if(!t.path){ done++; setProgress(Math.round((done/total)*100)); continue; }
+    if(!t.path){ done++; continue; }
     if(t.type === 'img'){
       const img = await loadImage(t.path);
       if(img){
@@ -217,65 +218,62 @@ async function preloadAssets(showProgress=true){
       } else console.warn('Missing audio', t.path);
     }
     done++;
-    setProgress(Math.round((done/total)*100), `Loading ${Math.round((done/total)*100)}%`);
-    await new Promise(r=>setTimeout(r,40)); // small UX pacing
+    const pct = Math.floor((done/total)*100);
+    if(preloaderEl) preloaderEl.querySelector('p') && (preloaderEl.querySelector('p').textContent = `Loading assets... ${pct}%`);
+    await new Promise(r=>setTimeout(r, 30)); // small pacing
   }
 
-  // set volumes
-  if(AUDIO.bg){ AUDIO.bg.loop = true; AUDIO.bg.volume = SETTINGS.musicVol; }
-  if(AUDIO.spawn) AUDIO.spawn.volume = SETTINGS.sfxVol;
-  if(AUDIO.pickup) AUDIO.pickup.volume = SETTINGS.sfxVol;
-  if(AUDIO.death) AUDIO.death.volume = SETTINGS.sfxVol;
+  // set volumes & loop
+  if(AUDIO.bg){ AUDIO.bg.loop = true; AUDIO.bg.volume = SETTINGS.musicVolume; }
+  if(AUDIO.spawn) AUDIO.spawn.volume = SETTINGS.sfxVolume;
+  if(AUDIO.pickup) AUDIO.pickup.volume = SETTINGS.sfxVolume;
+  if(AUDIO.portal) AUDIO.portal.volume = SETTINGS.sfxVolume;
+  if(AUDIO.death) AUDIO.death.volume = SETTINGS.sfxVolume;
 
-  // compute sprite frame sizes safely
-  computeSpriteFrames();
+  // compute sprite frame sizes
+  if(IMG.ninja){ SPRITES.ninja.frameW = Math.floor(IMG.ninja.naturalWidth / SPRITES.ninja.cols); SPRITES.ninja.frameH = Math.floor(IMG.ninja.naturalHeight / SPRITES.ninja.rows); }
+  if(IMG.clones){ SPRITES.clones.frameW = Math.floor(IMG.clones.naturalWidth / SPRITES.clones.cols); SPRITES.clones.frameH = Math.floor(IMG.clones.naturalHeight / SPRITES.clones.rows); }
+  if(IMG.portal){ SPRITES.portal.frameW = Math.floor(IMG.portal.naturalWidth / SPRITES.portal.cols); SPRITES.portal.frameH = Math.floor(IMG.portal.naturalHeight / SPRITES.portal.rows); }
+
+  if(showPreloader && preloaderEl) preloaderEl.style.display = 'none';
 }
 
-/* compute sprite frame size integers to avoid bleeding between frames */
-function computeSpriteFrames(){
-  if(IMG.ninja){ SPRITE.ninja.frameW = Math.floor(IMG.ninja.naturalWidth / SPRITE.ninja.cols); SPRITE.ninja.frameH = Math.floor(IMG.ninja.naturalHeight / SPRITE.ninja.rows); }
-  if(IMG.clones){ SPRITE.clones.frameW = Math.floor(IMG.clones.naturalWidth / SPRITE.clones.cols); SPRITE.clones.frameH = Math.floor(IMG.clones.naturalHeight / SPRITE.clones.rows); }
-  if(IMG.portal){ SPRITE.portal.frameW = Math.floor(IMG.portal.naturalWidth / SPRITE.portal.cols); SPRITE.portal.frameH = Math.floor(IMG.portal.naturalHeight / SPRITE.portal.rows); }
-}
+/* =========================
+   Canvas sizing & resize
+   ========================= */
+function setupCanvas(){
+  pixelRatio = window.devicePixelRatio || 1;
+  const maxW = Math.min(window.innerWidth - 40, 1200);
+  const cssW = Math.min(maxW, window.innerWidth - 40);
+  canvasEl.style.width = cssW + 'px';
+  const logicalW = Math.floor(cssW);
+  const logicalH = Math.floor(logicalW * 0.62);
+  canvasEl.width = Math.floor(logicalW * pixelRatio);
+  canvasEl.height = Math.floor(logicalH * pixelRatio);
+  ctx = canvasEl.getContext('2d');
+  ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
 
-/* ===========================
-   CANVAS / GRID RESIZE
-   =========================== */
-function resize(){
-  // Canvas CSS max - keep within screen with margins
-  const maxW = Math.min(window.innerWidth - 32, 1200);
-  const width = Math.min(maxW, window.innerWidth - 40);
-  CANVAS.style.width = width + 'px';
-  const ratio = window.devicePixelRatio || 1;
-  const logicalW = Math.floor(width);
-  const logicalH = Math.floor(logicalW * 0.62); // 16:10-ish
-  CANVAS.width = Math.floor(logicalW * ratio);
-  CANVAS.height = Math.floor(logicalH * ratio);
-  ctx.setTransform(ratio,0,0,ratio,0,0);
-
-  // minimap small canvas size
-  const mmW = Math.min(220, Math.floor(width * 0.28));
+  // minimap
+  const mmW = Math.min(220, Math.floor(cssW * 0.28));
   const mmH = Math.floor(mmW * 0.55);
-  MINIMAP.width = mmW;
-  MINIMAP.height = mmH;
-  MINIMAP.style.width = mmW + 'px';
-  MINIMAP.style.height = mmH + 'px';
+  minimapEl.width = mmW;
+  minimapEl.height = mmH;
+  minimapEl.style.width = mmW + 'px';
+  minimapEl.style.height = mmH + 'px';
+  miniCtx = minimapEl.getContext('2d');
 
-  // grid
-  const cssW = CANVAS.clientWidth || logicalW;
-  const cssH = CANVAS.clientHeight || logicalH;
+  // recompute grid (cols/rows/tileSize)
   const preferred = window.innerWidth < 720 ? 24 : 36;
   cols = Math.max(11, Math.floor(cssW / preferred));
-  rows = Math.max(11, Math.floor(cssH / preferred));
+  rows = Math.max(11, Math.floor((logicalH) / preferred));
   if(cols % 2 === 0) cols--;
   if(rows % 2 === 0) rows--;
-  tileSize = Math.floor(Math.min(cssW / cols, cssH / rows));
+  tileSize = Math.floor(Math.min(cssW / cols, logicalH / rows));
 }
-window.addEventListener('resize', resize);
 
-/* ===========================
-   MAZE GENERATOR (recursive backtracker)
-   =========================== */
+/* =========================
+   Maze generation (recursive backtracker)
+   ========================= */
 function generateMaze(c, r){
   const grid = Array.from({length:r}, ()=> Array(c).fill(1));
   function carve(x,y){
@@ -290,38 +288,32 @@ function generateMaze(c, r){
     }
   }
   carve(1,1);
-  // safe zone
   grid[1][1] = 0; if(grid[1][2] !== undefined) grid[1][2] = 0; if(grid[2]) grid[2][1] = 0;
   return grid;
 }
 
-/* cache maze visuals for performance */
+/* cache maze to offscreen canvas for performance */
 function cacheMaze(){
-  if(!maze) return;
   mazeCache = document.createElement('canvas');
   mazeCache.width = cols * tileSize;
   mazeCache.height = rows * tileSize;
   const mctx = mazeCache.getContext('2d');
-  mctx.fillStyle = '#0b0b0b';
-  mctx.fillRect(0,0,mazeCache.width, mazeCache.height);
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       if(maze[y][x] === 1){
-        mctx.fillStyle = '#222';
+        mctx.fillStyle = '#2e2e2e';
         mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
         mctx.fillStyle = 'rgba(0,0,0,0.06)';
         mctx.fillRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
       } else {
-        mctx.fillStyle = '#070707';
+        mctx.fillStyle = '#0f0f0f';
         mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
       }
     }
   }
 }
 
-/* ===========================
-   PORTAL (place farthest cell)
-   =========================== */
+/* find a remote location for the portal (farthest from start) */
 function placePortal(){
   let best = null, bestd = -1;
   for(let y=rows-2;y>=1;y--){
@@ -335,71 +327,50 @@ function placePortal(){
   PORTAL = best;
 }
 
-/* ===========================
-   START / RESET LEVEL
-   =========================== */
-function startLevel(index = 0){
-  currentLevelIndex = clamp(index, 0, LEVELS.length-1);
-  const L = LEVELS[currentLevelIndex];
-  resize();
-  cols = Math.max(11, Math.floor(19 * L.scale));
-  rows = Math.max(11, Math.floor(19 * L.scale));
-  if(cols % 2 === 0) cols--; if(rows % 2 === 0) rows--;
-  maze = generateMaze(cols, rows);
-  cacheMaze();
-  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6, tileSize*0.36), color:'#66ff99' };
-  movesHistory = [];
-  clones = [];
-  powerups = [];
-  particles = [];
-  frame = 0;
-  cloneInterval = Math.max(40, 300 - (SETTINGS.difficulty-1)*80);
-  running = true; paused = false; startTime = Date.now(); activePower = null;
-  placePortal();
-  STATUS_TEXT && (STATUS_TEXT.textContent = `Level: ${L.name}`);
-  if(BEST_RECORD_TEXT) BEST_RECORD_TEXT.textContent = (Number(localStorage.getItem(STORAGE_KEYS.BEST))||0) ? `Best: ${Number(localStorage.getItem(STORAGE_KEYS.BEST))}s` : 'Best: —';
-}
-
-/* ===========================
-   POWERUPS
-   =========================== */
+/* =========================
+   Powerups
+   ========================= */
 const POWER_TYPES = ['speed','cloak','shock'];
 function spawnPowerup(){
-  let attempts = 0;
-  while(attempts++ < 350){
+  let tries = 0;
+  while(tries++ < 300){
     const x = randInt(1, cols-2);
     const y = randInt(1, rows-2);
     if(maze[y][x] === 0 && !(x===player.x && y===player.y) && !powerups.some(p=>p.x===x && p.y===y)){
-      powerups.push({x,y,type:POWER_TYPES[randInt(0, POWER_TYPES.length-1)], spawned:Date.now(), bob:Math.random()*Math.PI*2});
-      return;
+      powerups.push({ x, y, type: POWER_TYPES[randInt(0, POWER_TYPES.length-1)], bob: Math.random()*Math.PI*2, spawned: Date.now() });
+      break;
     }
   }
 }
 function applyPowerup(type){
-  if(type==='speed') activePower = { type:'speed', until: Date.now() + 4500 };
-  else if(type==='cloak') activePower = { type:'cloak', until: Date.now() + 5000 };
-  else if(type==='shock') clones.forEach(c=> c.index = Math.max(0, (c.index||0) - 28));
-  if(SETTINGS.sfx && AUDIO.pickup) safePlay(AUDIO.pickup, SETTINGS.sfxVol);
-  showNotif(`${type.toUpperCase()}!`);
+  if(type === 'speed') activePower = { type:'speed', until: Date.now() + 4500 };
+  else if(type === 'cloak') activePower = { type:'cloak', until: Date.now() + 5000 };
+  else if(type === 'shock'){
+    clones.forEach(c => { c.index = Math.max(0, (c.index||0) - 28); });
+    spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#bfe8ff', 18);
+    if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume);
+  }
+  if(SETTINGS.sfx && AUDIO.pickup) safePlay(AUDIO.pickup, SETTINGS.sfxVolume);
+  showToast(`${type.toUpperCase()}!`);
 }
 
-/* ===========================
-   PARTICLES
-   =========================== */
-function spawnParticles(px,py,color,count=18){
+/* =========================
+   Particles utils
+   ========================= */
+function spawnParticles(px, py, color, count = 18){
   for(let i=0;i<count;i++){
     particles.push({
-      x: px + (Math.random()-0.5)*tileSize,
-      y: py + (Math.random()-0.5)*tileSize,
-      vx: (Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life: 28 + Math.random()*36, color
+      x: px + (Math.random()-0.5) * tileSize,
+      y: py + (Math.random()-0.5) * tileSize,
+      vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
+      life: 30 + Math.random()*40,
+      color
     });
   }
 }
 function updateParticles(){
   for(let i=particles.length-1;i>=0;i--){
-    const p = particles[i];
-    p.x += p.vx; p.y += p.vy; p.vy += 0.06;
-    p.vx *= 0.995; p.vy *= 0.995; p.life--;
+    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.vx *= 0.995; p.vy *= 0.995; p.life--;
     if(p.life <= 0) particles.splice(i,1);
   }
 }
@@ -407,31 +378,33 @@ function drawParticles(){
   for(const p of particles){
     ctx.globalAlpha = Math.max(0, p.life/70);
     ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 3,3);
+    ctx.fillRect(p.x, p.y, 3, 3);
   }
   ctx.globalAlpha = 1;
 }
 
-/* ===========================
-   Clone Class
-   =========================== */
+/* =========================
+   Clone class & behavior
+   ========================= */
 class Clone {
   constructor(path, type='basic'){
     this.path = path.slice();
     this.index = 0;
     this.type = type;
-    this.spawnFrame = frame;
+    this.spawnFrame = frameCount;
     this.x = this.path[0]?.x ?? 1;
     this.y = this.path[0]?.y ?? 1;
   }
   update(){
-    if(this.type === 'fast') this.index += 1 + (Math.random()<0.45 ? 1:0);
+    if(this.type === 'fast') this.index += 1 + (Math.random() < 0.45 ? 1 : 0);
     else if(this.type === 'wraith'){
-      if(Math.random() < 0.01 + Math.min(0.05, frame/60000)){
+      if(Math.random() < 0.01 + Math.min(0.05, frameCount/60000)){
         const jump = Math.min(50, Math.floor(Math.random()*Math.min(200, this.path.length)));
         this.index = Math.min(this.path.length - 1, this.index + jump);
       } else this.index++;
-    } else this.index++;
+    } else {
+      this.index++;
+    }
     if(this.index < this.path.length){
       this.x = this.path[this.index].x;
       this.y = this.path[this.index].y;
@@ -439,10 +412,10 @@ class Clone {
   }
   draw(){
     if(IMG.clones){
-      const typeIndex = (this.type === 'wraith') ? 2 : (this.type === 'fast' ? 1 : 0);
-      const sx = typeIndex * SPRITE.clones.frameW;
+      const tIndex = (this.type === 'wraith') ? 2 : (this.type === 'fast' ? 1 : 0);
+      const sx = tIndex * SPRITES.clones.frameW;
       ctx.globalAlpha = 0.95;
-      ctx.drawImage(IMG.clones, sx, 0, SPRITE.clones.frameW, SPRITE.clones.frameH, this.x*tileSize, this.y*tileSize, tileSize, tileSize);
+      ctx.drawImage(IMG.clones, sx, 0, SPRITES.clones.frameW, SPRITES.clones.frameH, this.x*tileSize, this.y*tileSize, tileSize, tileSize);
       ctx.globalAlpha = 1;
     } else {
       ctx.fillStyle = this.type === 'wraith' ? '#b14' : this.type === 'fast' ? '#f90' : '#c33';
@@ -451,34 +424,36 @@ class Clone {
   }
 }
 
-/* ===========================
-   INPUT & PLAYER MOVEMENT
-   =========================== */
+/* =========================
+   Player & input handling
+   ========================= */
 let activeDirs = { up:false, down:false, left:false, right:false };
 let lastStepTime = 0;
 let stepMsBase = 140;
 
 document.addEventListener('keydown', (e)=>{
-  if(e.key === SETTINGS.controls.up) { activeDirs.up=true; stepPlayer(); playFootstep(); }
-  if(e.key === SETTINGS.controls.down) { activeDirs.down=true; stepPlayer(); }
-  if(e.key === SETTINGS.controls.left) { activeDirs.left=true; stepPlayer(); }
-  if(e.key === SETTINGS.controls.right) { activeDirs.right=true; stepPlayer(); }
-  if(e.key === SETTINGS.controls.shock) applyPowerup('shock');
-  if(e.key === 'Escape') togglePause();
+  const key = e.key;
+  if(['w','W','ArrowUp'].includes(key)) { activeDirs.up = true; stepPlayer(); playStep(); }
+  if(['s','S','ArrowDown'].includes(key)) { activeDirs.down = true; stepPlayer(); playStep(); }
+  if(['a','A','ArrowLeft'].includes(key)) { activeDirs.left = true; stepPlayer(); playStep(); }
+  if(['d','D','ArrowRight'].includes(key)) { activeDirs.right = true; stepPlayer(); playStep(); }
+  if(key === ' ') applyPowerup('shock');
+  if(key === 'Escape') togglePause();
 });
 document.addEventListener('keyup', (e)=>{
-  if(e.key === SETTINGS.controls.up) activeDirs.up=false;
-  if(e.key === SETTINGS.controls.down) activeDirs.down=false;
-  if(e.key === SETTINGS.controls.left) activeDirs.left=false;
-  if(e.key === SETTINGS.controls.right) activeDirs.right=false;
+  const key = e.key;
+  if(['w','W','ArrowUp'].includes(key)) activeDirs.up = false;
+  if(['s','S','ArrowDown'].includes(key)) activeDirs.down = false;
+  if(['a','A','ArrowLeft'].includes(key)) activeDirs.left = false;
+  if(['d','D','ArrowRight'].includes(key)) activeDirs.right = false;
 });
 
-function playFootstep(){ if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVol); }
+function playStep(){ if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume); }
 
 function stepPlayer(){
   const now = performance.now();
   const speedFactor = (activePower && activePower.type === 'speed' && Date.now() < activePower.until) ? 0.55 : 1;
-  const ms = Math.max(60, Math.floor(stepMsBase * speedFactor - (SETTINGS.difficulty-1) * 10));
+  const ms = Math.max(60, Math.floor(stepMsBase * speedFactor - (difficultyValue()-1) * 8));
   if(now - lastStepTime < ms) return;
   lastStepTime = now;
   if(!running || paused) return;
@@ -491,77 +466,70 @@ function stepPlayer(){
 
   if(nx>=0 && nx<cols && ny>=0 && ny<rows && maze[ny][nx] === 0){
     player.x = nx; player.y = ny;
-    movesHistory.push({x:nx,y:ny});
-    // pickup
+    movesHistory.push({x:nx, y:ny});
+    // pickup powerups
     for(let i=powerups.length-1;i>=0;i--){
-      if(powerups[i].x===nx && powerups[i].y===ny){
-        applyPowerup(powerups[i].type);
+      const p = powerups[i];
+      if(p.x === nx && p.y === ny){
+        applyPowerup(p.type);
         powerups.splice(i,1);
         break;
       }
     }
-    // reached portal?
-    if(PORTAL && nx===PORTAL.x && ny===PORTAL.y){
-      if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVol);
+    // portal reached
+    if(PORTAL && nx === PORTAL.x && ny === PORTAL.y){
+      if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVolume);
       transitionToNextLevel();
     }
   }
 }
 
-/* mobile joystick (pointer based) - auto-appears on touch devices */
+/* =========================
+   Mobile joystick (pointer-based)
+   ========================= */
 let joystickActive = false;
 let joystickPointerId = null;
-let joystickOrigin = {x:0,y:0};
-let joystickPos = {x:0,y:0};
-let joystickRadius = 40;
+let joystickOrigin = {x:0, y:0};
+let joystickPos = {x:0, y:0};
+const joystickMax = 40;
 
-// show joystick on touch devices
 function initJoystick(){
-  if(!JOYSTICK_CONTAINER || !JOYSTICK) return;
+  if(!joystickContainer || !joystickEl) return;
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if(!isTouch){ JOYSTICK_CONTAINER.classList.add('hidden'); return; }
-  JOYSTICK_CONTAINER.classList.remove('hidden');
+  if(!isTouch){ joystickContainer.classList.add('hidden'); return; }
+  joystickContainer.classList.remove('hidden');
 
-  // pointerdown on container to capture start
-  JOYSTICK_CONTAINER.addEventListener('pointerdown', (ev)=>{
-    JOYSTICK_CONTAINER.setPointerCapture(ev.pointerId);
+  joystickContainer.addEventListener('pointerdown', (ev)=>{
+    joystickContainer.setPointerCapture(ev.pointerId);
     joystickActive = true;
     joystickPointerId = ev.pointerId;
-    const rect = JOYSTICK_CONTAINER.getBoundingClientRect();
+    const rect = joystickContainer.getBoundingClientRect();
     joystickOrigin.x = rect.left + rect.width/2;
     joystickOrigin.y = rect.top + rect.height/2;
-    updateJoystickFromPointer(ev.clientX, ev.clientY);
+    updateJoystick(ev.clientX, ev.clientY);
   });
-
-  JOYSTICK_CONTAINER.addEventListener('pointermove', (ev)=>{
+  joystickContainer.addEventListener('pointermove', (ev)=>{
     if(!joystickActive || ev.pointerId !== joystickPointerId) return;
-    updateJoystickFromPointer(ev.clientX, ev.clientY);
+    updateJoystick(ev.clientX, ev.clientY);
   });
-
-  JOYSTICK_CONTAINER.addEventListener('pointerup', (ev)=>{
+  joystickContainer.addEventListener('pointerup', (ev)=>{
     if(ev.pointerId !== joystickPointerId) return;
     joystickActive = false;
     joystickPointerId = null;
-    joystickPos.x = 0; joystickPos.y = 0;
-    JOYSTICK.style.transform = `translate(0px,0px)`;
-    activeDirs = {up:false,down:false,left:false,right:false};
+    joystickPos = {x:0, y:0};
+    joystickEl.style.transform = `translate(0px,0px)`;
+    activeDirs = { up:false, down:false, left:false, right:false };
   });
-
-  JOYSTICK_CONTAINER.addEventListener('pointercancel', (ev)=>{ joystickActive = false; joystickPointerId=null; joystickPos={x:0,y:0}; JOYSTICK.style.transform = `translate(0px,0px)`; activeDirs = {up:false,down:false,left:false,right:false}; });
+  joystickContainer.addEventListener('pointercancel', ()=>{ joystickActive = false; joystickPointerId = null; joystickPos={x:0,y:0}; joystickEl.style.transform = `translate(0px,0px)`; activeDirs={ up:false, down:false, left:false, right:false }; });
 }
 
-function updateJoystickFromPointer(cx, cy){
-  const dx = cx - joystickOrigin.x;
-  const dy = cy - joystickOrigin.y;
-  const dist = Math.sqrt(dx*dx+dy*dy);
-  const max = joystickRadius;
-  const nx = dx / (dist || 1);
-  const ny = dy / (dist || 1);
-  const r = Math.min(dist, max) * SETTINGS.joystickSensitivity;
-  joystickPos.x = nx * r;
-  joystickPos.y = ny * r;
-  JOYSTICK.style.transform = `translate(${joystickPos.x}px, ${joystickPos.y}px)`;
-  // map to directional flags
+function updateJoystick(cx, cy){
+  const dx = cx - joystickOrigin.x, dy = cy - joystickOrigin.y;
+  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+  const nx = dx / dist, ny = dy / dist;
+  const r = Math.min(dist, joystickMax) * SETTINGS.joystickSensitivity;
+  joystickPos.x = nx * r; joystickPos.y = ny * r;
+  joystickEl.style.transform = `translate(${joystickPos.x}px, ${joystickPos.y}px)`;
   activeDirs.up = (ny < -0.45 && Math.abs(ny) > Math.abs(nx));
   activeDirs.down = (ny > 0.45 && Math.abs(ny) > Math.abs(nx));
   activeDirs.left = (nx < -0.45 && Math.abs(nx) > Math.abs(ny));
@@ -569,9 +537,9 @@ function updateJoystickFromPointer(cx, cy){
   stepPlayer();
 }
 
-/* ===========================
-   Spawn clones (based on movesHistory snapshot)
-   =========================== */
+/* =========================
+   Clone spawning
+   ========================= */
 function spawnClone(){
   if(movesHistory.length < 6) return;
   const len = Math.min(900, movesHistory.length);
@@ -580,57 +548,46 @@ function spawnClone(){
   let type = 'basic';
   if(p < 0.08) type = 'wraith';
   else if(p < 0.22) type = 'fast';
-  const c = new Clone(snap, type);
-  clones.push(c);
-  if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVol);
-  spawnParticles((c.x||player.x)*tileSize + tileSize/2, (c.y||player.y)*tileSize + tileSize/2, '#ff4466');
+  clones.push(new Clone(snap, type));
+  if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume);
+  spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ff4466');
 }
 
-/* ===========================
-   DRAW HELPERS
-   =========================== */
+/* =========================
+   Draw helpers (background, maze, portal, minimap, player)
+   ========================= */
 function drawBackground(now){
+  const w = canvasEl.clientWidth;
+  const h = canvasEl.clientHeight;
   ctx.save();
-  const w = CANVAS.width / (window.devicePixelRatio || 1);
-  const h = CANVAS.height / (window.devicePixelRatio || 1);
-
+  // parallax main background
   if(IMG.background){
-    // parallax subtle movement
     const t = Date.now()/12000;
-    const xoff = Math.sin(t)*36;
-    ctx.drawImage(IMG.background, 0, 0, IMG.background.naturalWidth, IMG.background.naturalHeight, -40 + xoff, -20, w+80, h+40);
+    const xoff = Math.sin(t) * 36;
+    ctx.drawImage(IMG.background, -40 + xoff, -20, w + 80, h + 40);
   } else {
     const g = ctx.createLinearGradient(0,0,w,h);
-    g.addColorStop(0, '#06202A'); g.addColorStop(1,'#05050a');
+    g.addColorStop(0,'#071018'); g.addColorStop(1,'#03040a');
     ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
   }
-
-  // optional layers
-  if(IMG.bgLayers && IMG.bgLayers.length){
-    for(let i=0;i<IMG.bgLayers.length;i++){
-      const layer = IMG.bgLayers[i];
-      if(!layer) continue;
-      const depth = (i+1) / (IMG.bgLayers.length+1);
-      const xoff = Math.sin(Date.now()/(7000*(1+depth))) * 12 * depth;
-      ctx.globalAlpha = 0.75 - depth*0.15;
-      ctx.drawImage(layer, -20 + xoff, -10, w+40, h+20);
-      ctx.globalAlpha = 1;
-    }
+  // layered parallax
+  for(let i=0;i<IMG.bgLayers.length;i++){
+    const layer = IMG.bgLayers[i];
+    if(!layer) continue;
+    const depth = (i+1) / (IMG.bgLayers.length+1);
+    const xoff = Math.sin(Date.now()/(7000*(1+depth))) * 12 * depth;
+    ctx.globalAlpha = 0.75 - depth * 0.15;
+    ctx.drawImage(layer, -20 + xoff, -10, w+40, h+20);
+    ctx.globalAlpha = 1;
   }
-
   ctx.restore();
-
-  // overlay cinematic vignette
-  ctx.fillStyle = 'rgba(0,0,0,0.06)';
-  ctx.fillRect(0,0, CANVAS.width/(window.devicePixelRatio||1), CANVAS.height/(window.devicePixelRatio||1));
+  // vignette
+  ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.fillRect(0,0,w,h);
 }
 
 function drawMaze(){
   if(!maze) return;
-  if(mazeCache){
-    ctx.drawImage(mazeCache, 0, 0);
-    return;
-  }
+  if(mazeCache){ ctx.drawImage(mazeCache, 0, 0); return; }
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       if(maze[y][x] === 1){
@@ -646,19 +603,14 @@ function drawMaze(){
   }
 }
 
-function drawPowerups(){
+function drawPowerups(now){
   for(const pu of powerups){
-    const cx = pu.x*tileSize + tileSize/2, cy = pu.y*tileSize + tileSize/2 + Math.sin((frame+pu.bob)*0.12)*3;
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.rotate(Math.sin(frame/18 + pu.bob)*0.08);
-    if(pu.type === 'speed'){
-      ctx.fillStyle = '#4fd1ff'; ctx.beginPath(); ctx.arc(0,0,tileSize*0.22,0,Math.PI*2); ctx.fill();
-    } else if(pu.type === 'cloak'){
-      ctx.fillStyle = '#9be7b0'; ctx.fillRect(-tileSize*0.2,-tileSize*0.2,tileSize*0.4,tileSize*0.4);
-    } else {
-      ctx.fillStyle = '#bfe8ff'; ctx.beginPath(); ctx.moveTo(0,-tileSize*0.22); ctx.lineTo(tileSize*0.14,0); ctx.lineTo(-tileSize*0.14,0); ctx.fill();
-    }
+    const cx = pu.x*tileSize + tileSize/2;
+    const cy = pu.y*tileSize + tileSize/2 + Math.sin((frameCount + pu.bob) * 0.12) * 3;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(frameCount/18 + pu.bob)*0.08);
+    if(pu.type === 'speed'){ ctx.fillStyle = '#4fd1ff'; ctx.beginPath(); ctx.arc(0,0,tileSize*0.24,0,Math.PI*2); ctx.fill(); }
+    else if(pu.type === 'cloak'){ ctx.fillStyle = '#9be7b0'; ctx.fillRect(-tileSize*0.2, -tileSize*0.2, tileSize*0.4, tileSize*0.4); }
+    else { ctx.fillStyle = '#bfe8ff'; ctx.beginPath(); ctx.moveTo(0,-tileSize*0.22); ctx.lineTo(tileSize*0.14,0); ctx.lineTo(-tileSize*0.14,0); ctx.fill(); }
     ctx.restore();
   }
 }
@@ -669,9 +621,7 @@ function drawPortal(now){
   const scale = 0.9 + 0.08 * Math.sin(now/280);
   const rot = (now / 1400) % (Math.PI*2);
   if(IMG.portal){
-    ctx.save();
-    ctx.translate(px,py);
-    ctx.rotate(rot);
+    ctx.save(); ctx.translate(px,py); ctx.rotate(rot);
     ctx.globalAlpha = 0.9 + 0.06 * Math.sin(now/320);
     ctx.drawImage(IMG.portal, -tileSize*scale/2, -tileSize*scale/2, tileSize*scale, tileSize*scale);
     ctx.restore();
@@ -680,9 +630,9 @@ function drawPortal(now){
   }
 }
 
-/* minimap - shows live player position and clones/powerups */
-function drawMiniMap(){
-  const mmW = MINIMAP.width, mmH = MINIMAP.height;
+function drawMinimap(){
+  if(!miniCtx) return;
+  const mmW = minimapEl.width, mmH = minimapEl.height;
   miniCtx.clearRect(0,0,mmW,mmH);
   const cw = mmW / cols, ch = mmH / rows;
   for(let y=0;y<rows;y++){
@@ -706,83 +656,64 @@ function drawMiniMap(){
   }
 }
 
-/* draw player sprite precisely (frame-based) */
 function drawPlayer(){
   if(!player) return;
   if(IMG.ninja){
-    const animCol = Math.floor((frame/6) % SPRITE.ninja.cols);
-    const sx = animCol * SPRITE.ninja.frameW;
+    const animCol = Math.floor((frameCount/6) % SPRITES.ninja.cols);
+    const sx = animCol * SPRITES.ninja.frameW;
     const sy = 0;
-    ctx.drawImage(IMG.ninja, sx, sy, SPRITE.ninja.frameW, SPRITE.ninja.frameH, player.rx*tileSize, player.ry*tileSize, tileSize, tileSize);
+    ctx.drawImage(IMG.ninja, sx, sy, SPRITES.ninja.frameW, SPRITES.ninja.frameH, player.rx*tileSize, player.ry*tileSize, tileSize, tileSize);
   } else {
     const px = player.rx*tileSize + tileSize/2, py = player.ry*tileSize + tileSize/2;
-    const pulse = 0.9 + Math.sin(Date.now()/420)*0.08;
+    const pulse = 0.9 + Math.sin(Date.now()/420) * 0.08;
     ctx.save(); ctx.shadowBlur = 18*pulse; ctx.shadowColor = 'rgba(50,255,150,0.12)'; ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(px,py,player.radius,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
 }
 
-/* ===========================
-   HUD / Notifs
-   =========================== */
-function updateHUD(){
-  if(TIMER_TEXT) TIMER_TEXT.textContent = `Time: ${nowSec()}s`;
-  if(activePower && Date.now() < activePower.until){
-    const rem = Math.ceil((activePower.until - Date.now())/1000);
-    if(POWERUP_BOX) POWERUP_BOX.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`;
-  } else {
-    if(POWERUP_BOX) POWERUP_BOX.innerHTML = '';
-    if(activePower && Date.now() >= activePower.until) activePower = null;
-  }
+/* =========================
+   HUD update & toast
+   ========================= */
+function setStatusText(s){
+  if(hudStatus) hudStatus.textContent = s;
 }
-function showNotif(text){
-  if(!NOTIF_AREA) return;
-  const el = document.createElement('div');
-  el.className = 'notif';
-  el.textContent = text;
-  NOTIF_AREA.appendChild(el);
-  setTimeout(()=>{ el.style.transition='opacity .45s, transform .45s'; el.style.opacity='0'; el.style.transform='translateY(-18px)'; setTimeout(()=>el.remove(),480); }, 1600);
+function showToast(text){
+  const el = document.createElement('div'); el.className = 'notif'; el.textContent = text; notifArea.appendChild(el);
+  setTimeout(()=>{ el.style.transition = 'opacity .45s, transform .45s'; el.style.opacity = '0'; el.style.transform = 'translateY(-18px)'; setTimeout(()=>el.remove(),480); }, 1600);
 }
 
-/* ===========================
-   MAIN LOOP
-   =========================== */
+/* =========================
+   Main game loop
+   ========================= */
 let lastFrameTime = performance.now();
-function loop(now){
+function animate(now){
   if(!running || paused) return;
-  const dt = (now - lastFrameTime)/1000; lastFrameTime = now; frame++;
+  const dt = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
+  frameCount++;
 
-  // occasional powerups spawn
-  if(frame % Math.max(300, Math.floor(800 / (1 + (SETTINGS.difficulty-1)*0.3))) === 0){
-    if(Math.random() < (LEVELS[currentLevelIndex].powerupRate || 0.02)) spawnPowerup();
-  }
+  // spawn powerups occasionally
+  if(frameCount % 900 === 0 && Math.random() < 0.88) spawnPowerup();
 
-  // clone spawn pacing
-  const intervalFrames = Math.max(8, Math.floor(cloneInterval / (1 + (SETTINGS.difficulty-1)*0.5)));
-  if(frame % intervalFrames === 0 && movesHistory.length > 8){
+  // clone spawn pacing based on cloneIntervalFrames
+  const intervalFrames = Math.max(8, Math.floor(cloneIntervalFrames / (1 + difficultyValue()*0.3)));
+  if(frameCount % intervalFrames === 0 && movesHistory.length > 8){
     spawnClone();
-    if(Math.random() < 0.02 + (SETTINGS.difficulty-1)*0.03) spawnClone();
-    if(cloneInterval > 30) cloneInterval = Math.max(30, cloneInterval - 1 - (SETTINGS.difficulty-1));
+    if(cloneIntervalFrames > 30) cloneIntervalFrames = Math.max(30, cloneIntervalFrames - 1 - (difficultyValue()-1));
+    if(Math.random() < 0.02 + (difficultyValue()-1) * 0.03) spawnClone();
   }
 
-  // update clone positions & collisions
+  // update clones & collision
   for(let i=clones.length-1;i>=0;i--){
-    const c = clones[i]; c.update();
+    const c = clones[i];
+    c.update();
     if(Math.round(c.x) === player.x && Math.round(c.y) === player.y){
       if(!(activePower && activePower.type === 'cloak' && Date.now() < activePower.until)){
-        // death sequence
+        // death
         running = false;
-        if(SETTINGS.sfx && AUDIO.death) safePlay(AUDIO.death, SETTINGS.sfxVol);
-        showNotif('☠️ You Died');
-        if(RESTART_BTN_HUD) RESTART_BTN_HUD.style.display = 'inline-block';
-        const elapsed = nowSec();
-        const prevBest = Number(localStorage.getItem(STORAGE_KEYS.BEST)) || 0;
-        if(elapsed > prevBest){
-          localStorage.setItem(STORAGE_KEYS.BEST, elapsed);
-          showNotif('NEW RECORD!');
-          addToLeaderboard(elapsed);
-        }
-        spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ffcc66', 36);
-        setTimeout(()=>{ startLevel(Math.max(0,currentLevelIndex)); }, 1100);
+        if(SETTINGS.sfx && AUDIO.death) safePlay(AUDIO.death, SETTINGS.sfxVolume);
+        showToast('☠️ You Died');
+        spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ffcc66', 40);
+        setTimeout(()=>{ gameOver(); }, 800);
         return;
       }
     }
@@ -791,45 +722,98 @@ function loop(now){
   updateParticles();
 
   // render pipeline
-  ctx.clearRect(0,0,CANVAS.width,CANVAS.height);
+  ctx.clearRect(0,0,canvasEl.width/pixelRatio, canvasEl.height/pixelRatio);
   drawBackground(now);
   drawMaze();
-  drawPowerups();
+  drawPowerups(now);
   drawPortal(now);
   for(const c of clones) c.draw();
 
-  // smooth player rendering
-  const speed = 12 + (SETTINGS.difficulty-1) * 6;
+  // smooth player position lerp
+  const speed = 12 + (difficultyValue()-1) * 6;
   const t = Math.min(1, dt * speed);
   player.rx = player.rx === undefined ? player.x : (player.rx + (player.x - player.rx) * t);
   player.ry = player.ry === undefined ? player.y : (player.ry + (player.y - player.ry) * t);
 
-  // trail
-  for(let i=Math.max(0,movesHistory.length-30); i<movesHistory.length; i++){
+  // trail effect (last few moves)
+  for(let i=Math.max(0, movesHistory.length-30); i<movesHistory.length; i++){
     const m = movesHistory[i];
-    const a = (i - Math.max(0,movesHistory.length-30)) / 30;
-    ctx.globalAlpha = 0.05 + a*0.25;
+    const alpha = (i - Math.max(0, movesHistory.length-30)) / 30;
+    ctx.globalAlpha = 0.05 + alpha * 0.25;
     ctx.fillStyle = '#33ff77';
     ctx.fillRect(m.x*tileSize + tileSize*0.28, m.y*tileSize + tileSize*0.28, tileSize*0.44, tileSize*0.44);
   }
   ctx.globalAlpha = 1;
 
-  // draw player
   drawPlayer();
-
   drawParticles();
-  drawMiniMap();
+  drawMinimap();
   updateHUD();
 
-  requestAnimationFrame(loop);
+  requestAnimationFrame(animate);
 }
 
-/* ===========================
-   TRANSITION TO NEXT LEVEL (Geometry-Dash style)
-   =========================== */
+/* =========================
+   Difficulty numeric mapping
+   ========================= */
+function difficultyValue(){
+  switch(SETTINGS.difficulty){
+    case 'easy': return 0.8;
+    case 'normal': return 1;
+    case 'hard': return 1.5;
+    case 'nightmare': return 2.2;
+    default: return 1;
+  }
+}
+
+/* =========================
+   Level start / reset / gameover
+   ========================= */
+function startLevel(index = 0){
+  currentLevel = clamp(index, 0, LEVELS.length-1);
+  const L = LEVELS[currentLevel];
+  setupCanvas();
+  cols = Math.max(11, Math.floor(19 * L.scale));
+  rows = Math.max(11, Math.floor(19 * L.scale));
+  if(cols % 2 === 0) cols--;
+  if(rows % 2 === 0) rows--;
+  maze = generateMaze(cols, rows);
+  cacheMaze();
+  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6, tileSize*0.36), color:'#66ff99' };
+  movesHistory = [];
+  clones = [];
+  powerups = [];
+  particles = [];
+  frameCount = 0;
+  cloneIntervalFrames = Math.max(40, 300 - Math.floor(difficultyValue()*80));
+  running = true; paused = false; startTime = Date.now(); activePower = null;
+  placePortal();
+  if(preloaderEl) preloaderEl.style.display = 'none';
+  setStatusText(`Level: ${L.name}`);
+  lastFrameTime = performance.now();
+  requestAnimationFrame(animate);
+  tickLoop();
+}
+
+/* game over */
+function gameOver(){
+  running = false;
+  // show game over menu
+  gameOverMenuEl && (gameOverMenuEl.classList.remove('hidden'));
+  // update scoreboard + leaderboard
+  const elapsed = nowSec();
+  const prevBest = Number(localStorage.getItem(KEY_BEST)) || 0;
+  if(elapsed > prevBest){
+    localStorage.setItem(KEY_BEST, elapsed);
+    showToast('NEW RECORD!');
+    addToLeaderboard(elapsed);
+  }
+}
+
+/* transition to next level — geometry-dash style */
 function transitionToNextLevel(){
   running = false;
-  if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVol);
+  if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVolume);
   let t = 0; const dur = 36;
   function anim(){
     ctx.save();
@@ -844,189 +828,181 @@ function transitionToNextLevel(){
     t++;
     if(t <= dur) requestAnimationFrame(anim);
     else {
-      startLevel(Math.min(LEVELS.length-1, currentLevelIndex + 1));
-      running = true; lastFrameTime = performance.now(); requestAnimationFrame(loop);
-      showNotif(`Level Up: ${LEVELS[currentLevelIndex].name}`);
+      startLevel(Math.min(LEVELS.length-1, currentLevel + 1));
+      showToast(`Level Up: ${LEVELS[currentLevel].name}`);
     }
   }
   anim();
 }
 
-/* ===========================
-   TICK LOOP (for held directions)
-   =========================== */
+/* =========================
+   Tick loop to keep stepping when holding keys
+   ========================= */
 let lastTick = 0;
-function tick(){
+function tickLoop(){
   if(!running || paused) return;
   const now = performance.now();
   if(now - lastTick > 120){
     if(activeDirs.up || activeDirs.down || activeDirs.left || activeDirs.right) stepPlayer();
     lastTick = now;
   }
-  requestAnimationFrame(tick);
+  requestAnimationFrame(tickLoop);
 }
 
-/* ===========================
-   Leaderboard / local storage
-   =========================== */
+/* =========================
+   Audio helper (safe play)
+   ========================= */
+function safePlay(a, vol=1){
+  if(!a) return;
+  try{ a.volume = vol; a.currentTime = 0; a.play().catch(()=>{}); }catch(e){}
+}
+
+/* =========================
+   Leaderboard & local store
+   ========================= */
 function addToLeaderboard(time){
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADER) || '[]');
-  let name = prompt('New high score! Enter your name (max 12 chars):','Player') || 'Player';
+  let list = JSON.parse(localStorage.getItem(KEY_LEADER) || '[]');
+  let name = prompt('New high score! Enter your name (max 12 chars):', 'Player') || 'Player';
   name = name.slice(0,12);
-  list.push({name, time});
+  list.push({ name, time });
   list.sort((a,b)=> b.time - a.time);
-  localStorage.setItem(STORAGE_KEYS.LEADER, JSON.stringify(list.slice(0,50)));
-  updateLeaderboardUI();
+  localStorage.setItem(KEY_LEADER, JSON.stringify(list.slice(0,50)));
 }
-function updateLeaderboardUI(){
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADER) || '[]');
-  if(!LEADERBOARD_LIST) return;
-  LEADERBOARD_LIST.innerHTML = '';
-  list.slice(0,10).forEach(it=>{
-    const li = document.createElement('li'); li.textContent = `${it.name} — ${it.time}s`; LEADERBOARD_LIST.appendChild(li);
-  });
+function getLeaderboard(){
+  return JSON.parse(localStorage.getItem(KEY_LEADER) || '[]');
 }
 
-/* ===========================
-   UI Wiring
-   =========================== */
+/* =========================
+   UI wiring
+   ========================= */
 function wireUI(){
-  // Menus
-  START_BTN?.addEventListener('click', async ()=>{
-    // preload with progress
-    await preloadAssets(true);
-    if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVol);
-    // show/hide
-    START_SCREEN.classList.add('hidden');
-    LEVEL_SCREEN.classList.add('hidden');
-    SETTINGS_SCREEN.classList.add('hidden');
-    TUTORIAL_SCREEN.classList.add('hidden');
-    GAME_CONTAINER.classList.remove('hidden');
-    // setup joystick and canvas
-    resize(); initJoystick();
+  // start
+  startBtn && startBtn.addEventListener('click', async ()=>{
+    // preload assets (show preloader)
+    await preloadAll(true);
+    // start music if allowed
+    if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume);
+    // hide main menu and open game
+    startMenuEl && startMenuEl.classList.add('hidden');
+    tutorialMenuEl && tutorialMenuEl.classList.add('hidden');
+    settingsMenuEl && settingsMenuEl.classList.add('hidden');
+    creditsMenuEl && creditsMenuEl.classList.add('hidden');
+    gameContainerEl && (gameContainerEl.style.display = 'block');
+    // setup joystick for mobile
+    initJoystick();
+    // start first level
     startLevel(0);
-    lastFrameTime = performance.now();
-    running = true; requestAnimationFrame(loop); tick();
   });
 
-  LEVEL_BTN?.addEventListener('click', ()=>{
-    START_SCREEN.classList.add('hidden');
-    LEVEL_SCREEN.classList.remove('hidden');
-    populateLevels();
-  });
-  BACK_TO_START?.addEventListener('click', ()=>{ LEVEL_SCREEN.classList.add('hidden'); START_SCREEN.classList.remove('hidden'); });
+  // menus
+  tutorialBtn && tutorialBtn.addEventListener('click', ()=>{ startMenuEl && startMenuEl.classList.add('hidden'); tutorialMenuEl && tutorialMenuEl.classList.remove('hidden');});
+  tutorialCloseBtns.forEach(b=> b.addEventListener('click', ()=>{ tutorialMenuEl && tutorialMenuEl.classList.add('hidden'); startMenuEl && startMenuEl.classList.remove('hidden'); }));
 
-  SETTINGS_BTN?.addEventListener('click', ()=>{ START_SCREEN.classList.add('hidden'); SETTINGS_SCREEN.classList.remove('hidden'); });
-  BACK_TO_START_SETTINGS?.addEventListener('click', ()=>{ SETTINGS_SCREEN.classList.add('hidden'); START_SCREEN.classList.remove('hidden'); saveSettings(); });
+  settingsBtn && settingsBtn.addEventListener('click', ()=>{ startMenuEl && startMenuEl.classList.add('hidden'); settingsMenuEl && settingsMenuEl.classList.remove('hidden'); });
+  settingsCloseBtns.forEach(b=> b.addEventListener('click', ()=>{ settingsMenuEl && settingsMenuEl.classList.add('hidden'); startMenuEl && startMenuEl.classList.remove('hidden'); saveSettings(); }));
 
-  TUTORIAL_BTN?.addEventListener('click', ()=>{ START_SCREEN.classList.add('hidden'); TUTORIAL_SCREEN.classList.remove('hidden'); });
-  CLOSE_TUTORIAL?.addEventListener('click', ()=>{ TUTORIAL_SCREEN.classList.add('hidden'); START_SCREEN.classList.remove('hidden'); });
+  creditsBtn && creditsBtn.addEventListener('click', ()=>{ startMenuEl && startMenuEl.classList.add('hidden'); creditsMenuEl && creditsMenuEl.classList.remove('hidden'); });
+  creditsCloseBtns.forEach(b=> b.addEventListener('click', ()=>{ creditsMenuEl && creditsMenuEl.classList.add('hidden'); startMenuEl && startMenuEl.classList.remove('hidden'); }));
 
-  // HUD
-  RESUME_BTN?.addEventListener('click', ()=>{ togglePause(); });
-  RESTART_BTN?.addEventListener('click', ()=>{ startLevel(0); });
-  QUIT_BTN?.addEventListener('click', ()=>{ running=false; GAME_CONTAINER.classList.add('hidden'); START_SCREEN.classList.remove('hidden'); if(AUDIO.bg) AUDIO.bg.pause(); });
+  // pause / resume / restart
+  resumeBtn && resumeBtn.addEventListener('click', ()=>{ togglePause(); });
+  restartBtn && restartBtn.addEventListener('click', ()=>{ startLevel(0); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume); });
+  quitBtn && quitBtn.addEventListener('click', ()=>{ running=false; gameContainerEl && (gameContainerEl.style.display='none'); startMenuEl && startMenuEl.classList.remove('hidden'); if(AUDIO.bg) AUDIO.bg.pause(); });
 
-  RESTART_BTN_HUD?.addEventListener('click', ()=>{ startLevel(0); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVol); lastFrameTime = performance.now(); running = true; requestAnimationFrame(loop); tick(); });
-  PAUSE_BTN_HUD?.addEventListener('click', ()=>{ togglePause(); });
-  BTN_POWER?.addEventListener('click', ()=> applyPowerup('shock'));
+  retryBtn && retryBtn.addEventListener('click', ()=>{ gameOverMenuEl && gameOverMenuEl.classList.add('hidden'); startLevel(0); });
+  quitToMenuBtn && quitToMenuBtn.addEventListener('click', ()=>{ gameOverMenuEl && gameOverMenuEl.classList.add('hidden'); startMenuEl && startMenuEl.classList.remove('hidden'); if(AUDIO.bg) AUDIO.bg.pause(); });
+  nextLevelBtn && nextLevelBtn.addEventListener('click', ()=>{ victoryMenuEl && victoryMenuEl.classList.add('hidden'); startLevel(currentLevel+1); });
+  quitToMenuBtn2 && quitToMenuBtn2.addEventListener('click', ()=>{ victoryMenuEl && victoryMenuEl.classList.add('hidden'); startMenuEl && startMenuEl.classList.remove('hidden'); });
 
-  // quick settings toggles exist in index.html side panel optionally
-  document.getElementById('musicToggleQuick')?.addEventListener('change', (e)=>{ SETTINGS.music = e.target.checked; if(!SETTINGS.music && AUDIO.bg) AUDIO.bg.pause(); else if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVol); saveSettings(); });
-  document.getElementById('sfxToggleQuick')?.addEventListener('change', (e)=>{ SETTINGS.sfx = e.target.checked; saveSettings(); });
-  document.getElementById('difficultyQuick')?.addEventListener('input', (e)=>{ SETTINGS.difficulty = Number(e.target.value); saveSettings(); });
+  // settings sliders
+  musicVolumeInput && musicVolumeInput.addEventListener('input', (e)=>{ SETTINGS.musicVolume = Number(e.target.value); if(AUDIO.bg) AUDIO.bg.volume = SETTINGS.musicVolume; saveSettings(); });
+  sfxVolumeInput && sfxVolumeInput.addEventListener('input', (e)=>{ SETTINGS.sfxVolume = Number(e.target.value); AUDIO.spawn && (AUDIO.spawn.volume = SETTINGS.sfxVolume); saveSettings(); });
+  difficultySelect && difficultySelect.addEventListener('change', (e)=>{ SETTINGS.difficulty = e.target.value; saveSettings(); });
 
-  // settings screen wiring
-  TOGGLE_MUSIC && (TOGGLE_MUSIC.checked = SETTINGS.music);
-  TOGGLE_SFX && (TOGGLE_SFX.checked = SETTINGS.sfx);
-  DIFFICULTY_SELECT && (DIFFICULTY_SELECT.value = SETTINGS.difficulty === 1 ? 'normal' : (SETTINGS.difficulty === 2 ? 'hard' : 'extreme'));
-  TOGGLE_MUSIC?.addEventListener('change', (e)=>{ SETTINGS.music = e.target.checked; saveSettings(); if(!SETTINGS.music && AUDIO.bg) AUDIO.bg.pause(); else if(AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVol); });
-  TOGGLE_SFX?.addEventListener('change', (e)=>{ SETTINGS.sfx = e.target.checked; saveSettings(); });
+  // window resize
+  window.addEventListener('resize', ()=>{ setupCanvas(); cacheMaze(); });
 
-  CLEAR_LEADERBOARD?.addEventListener('click', ()=>{ if(confirm('Clear local leaderboard?')){ localStorage.removeItem(STORAGE_KEYS.LEADER); updateLeaderboardUI(); } });
+  // debug exposure
+  window.__SHADOW = { IMG, AUDIO, startLevel, spawnPowerup, spawnClone, SETTINGS, getLeaderboard };
 }
 
-/* populate level buttons */
-function populateLevels(){
-  if(!LEVEL_BUTTONS) return;
-  LEVEL_BUTTONS.innerHTML = '';
-  LEVELS.forEach((L, idx)=>{
-    const btn = document.createElement('button');
-    btn.className = 'menu-btn';
-    btn.textContent = `${idx+1}. ${L.name}`;
-    btn.addEventListener('click', ()=>{ LEVEL_SCREEN.classList.add('hidden'); GAME_CONTAINER.classList.remove('hidden'); startLevel(idx); lastFrameTime = performance.now(); running = true; requestAnimationFrame(loop); tick(); });
-    LEVEL_BUTTONS.appendChild(btn);
-  });
-}
-
-/* ===========================
-   Helpers: settings persist, preview animation
-   =========================== */
-function saveSettings(){ localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(SETTINGS)); }
-function previewLoop(){
-  if(!PREVIEW_CANVAS || !PREVIEW_CTX) return;
-  PREVIEW_CTX.clearRect(0,0, PREVIEW_CANVAS.width, PREVIEW_CANVAS.height);
-  PREVIEW_CTX.fillStyle = '#02030a'; PREVIEW_CTX.fillRect(0,0, PREVIEW_CANVAS.width, PREVIEW_CANVAS.height);
-  for(let i=0;i<8;i++){
-    const x = 20 + i*44 + Math.sin(Date.now()/600 + i)*6;
-    PREVIEW_CTX.fillStyle = `rgba(102,255,153,${0.15 + (i%2)*0.2})`;
-    PREVIEW_CTX.beginPath(); PREVIEW_CTX.arc(x, PREVIEW_CANVAS.height/2, 8, 0, Math.PI*2); PREVIEW_CTX.fill();
-  }
-  requestAnimationFrame(previewLoop);
-}
-
-/* ===========================
+/* =========================
    Pause toggle
-   =========================== */
+   ========================= */
 function togglePause(){
   paused = !paused;
   if(paused){
     running = false;
-    PAUSE_OVERLAY && PAUSE_OVERLAY.classList.remove('hidden');
-    PAUSE_BTN_HUD && (PAUSE_BTN_HUD.textContent = '▶ Resume');
+    pauseMenuEl && pauseMenuEl.classList.remove('hidden');
     if(AUDIO.bg) AUDIO.bg.pause();
   } else {
+    pauseMenuEl && pauseMenuEl.classList.add('hidden');
     running = true;
-    PAUSE_OVERLAY && PAUSE_OVERLAY.classList.add('hidden');
-    PAUSE_BTN_HUD && (PAUSE_BTN_HUD.textContent = '⏸ Pause');
-    if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVol);
     lastFrameTime = performance.now();
-    requestAnimationFrame(loop);
-    tick();
+    requestAnimationFrame(animate);
+    tickLoop();
+    if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume);
   }
 }
 
-/* ===========================
-   Leaderboard UI update on load
-   =========================== */
-function initLeaderboard(){
-  updateLeaderboardUI();
+/* =========================
+   HUD update
+   ========================= */
+function updateHUD(){
+  // timer text maybe in index; if not present, skip
+  const timerEl = document.getElementById('timer');
+  if(timerEl) timerEl.textContent = `Time: ${nowSec()}s`;
+  // powerup box
+  const powerBox = document.getElementById('powerupBox');
+  if(powerBox){
+    if(activePower && Date.now() < activePower.until){
+      const rem = Math.ceil((activePower.until - Date.now()) / 1000);
+      powerBox.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`;
+    } else {
+      powerBox.innerHTML = '';
+      if(activePower && Date.now() >= activePower.until) activePower = null;
+    }
+  }
 }
 
-/* ===========================
-   Notifications (small helper)
-   =========================== */
-function showNotif(text){
-  if(!NOTIF_AREA) return;
-  const el = document.createElement('div'); el.className = 'notif'; el.textContent = text; NOTIF_AREA.appendChild(el);
-  setTimeout(()=>{ el.style.transition='opacity .45s, transform .45s'; el.style.opacity='0'; el.style.transform='translateY(-18px)'; setTimeout(()=>el.remove(),480); }, 1600);
+/* =========================
+   Game Over helper
+   ========================= */
+function gameOverCleanup(){
+  running = false;
+  // show Game Over menu (already called)
 }
 
-/* ===========================
-   Bootstrap
-   =========================== */
+/* =========================
+   Safe console wrapper for missing element warnings or debug
+   ========================= */
+function log(...args){ console.log('[SCE]', ...args); }
+
+/* =========================
+   Helper: get difficulty numeric value for pacing
+   ========================= */
+function difficultyNumeric(){
+  switch(SETTINGS.difficulty){
+    case 'easy': return 0.8;
+    case 'normal': return 1.0;
+    case 'hard': return 1.4;
+    case 'nightmare': return 1.9;
+    default: return 1.0;
+  }
+}
+
+/* =========================
+   Init boot sequence
+   ========================= */
 async function boot(){
-  resize();
+  if(!canvasEl || !minimapEl){ alert('Missing canvas or minimap elements in HTML. Make sure index.html uses IDs: gameCanvas and minimap.'); return; }
+  setupCanvas();
   wireUI();
-  previewLoop();
+  // prefetch quietly (no preloader)
+  try{ await preloadAll(false); }catch(e){ console.warn('prefetch error', e); }
+  // setup joystick
   initJoystick();
-  initLeaderboard();
-  // Preload non-critical assets quietly so preview looks nicer
-  try{ await preloadAssets(false); }catch(e){ console.warn('prefetch error', e); }
-  computeSpriteFrames();
+  // small preview animation loop for start screen if you want (not necessary)
+  console.log('Boot complete. Ready.');
 }
 boot();
-
-/* Expose debug helpers for easy debugging */
-window.__SHADOW = { IMG, AUDIO, startLevel, spawnPowerup, spawnClone, SETTINGS };
-
