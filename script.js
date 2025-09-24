@@ -15,7 +15,7 @@ const ASSETS = {
   ninja:    "assets/ninja_spritesheet.png",      // sprite (e.g., 1536x534, 4 cols x 1 row)
   clones:   "assets/clones_spritesheet.png",     // sprite (e.g., 1060x433, 3 cols x 1)
   portal:   "assets/portal.png",                 // portal sprite
-  bg:       "assets/background.png",             // main background (optional)
+  bg:       "background.png",             // main background (optional)
 
   // audio - replace with your files or leave null to skip
   bgMusic:  "assets/bg_music_loop.wav",
