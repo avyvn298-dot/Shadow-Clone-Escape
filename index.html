@@ -3,137 +3,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shadow Clone Escape - AAA Edition</title>
+  <title>Ninja Clone Escape - AAA Edition</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ============================= -->
-  <!-- PRELOADER -->
-  <!-- ============================= -->
-  <div id="preloader">
-    <div class="spinner"></div>
-    <h2>Loading Shadow Clone Escape...</h2>
-  </div>
-
-  <!-- ============================= -->
-  <!-- MAIN START MENU -->
-  <!-- ============================= -->
-  <div id="startMenu" class="menu active">
-    <h1 class="title neon">⚔️ Shadow Clone Escape ⚔️</h1>
-    <div class="menu-buttons">
-      <button id="startBtn" class="btn">Start Game</button>
-      <button id="tutorialBtn" class="btn">Tutorial</button>
-      <button id="settingsBtn" class="btn">Settings</button>
-      <button id="creditsBtn" class="btn">Credits</button>
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" class="screen active">
+    <div class="loading-logo">Ninja Clone Escape</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar"></div>
     </div>
+    <p class="loading-text">Loading assets...</p>
   </div>
 
-  <!-- ============================= -->
-  <!-- TUTORIAL MENU -->
-  <!-- ============================= -->
-  <div id="tutorialMenu" class="menu hidden">
-    <h2 class="menu-title">How to Play</h2>
-    <ul>
-      <li>🎮 <b>PC:</b> Use <kbd>WASD</kbd> or <kbd>Arrow Keys</kbd> to move</li>
-      <li>📱 <b>Mobile:</b> Use the on-screen joystick</li>
-      <li>✨ Collect <b>power-ups</b> to gain abilities</li>
-      <li>🚪 Reach the <b>portal</b> to finish the level</li>
-      <li>⚠️ Avoid traps and don’t let clones catch you</li>
-    </ul>
-    <button class="closeBtn">Close</button>
+  <!-- MAIN MENU -->
+  <div id="main-menu" class="screen hidden">
+    <h1 class="game-title">Ninja Clone Escape</h1>
+    <button id="start-btn" class="menu-btn">Start Game</button>
+    <button id="tutorial-btn" class="menu-btn">Tutorial</button>
+    <button id="settings-btn" class="menu-btn">Settings</button>
+    <button id="credits-btn" class="menu-btn">Credits</button>
   </div>
 
-  <!-- ============================= -->
   <!-- SETTINGS MENU -->
-  <!-- ============================= -->
-  <div id="settingsMenu" class="menu hidden">
-    <h2 class="menu-title">Settings</h2>
-    <div class="setting-group">
-      <label for="musicVolume">🎵 Music Volume</label>
-      <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="0.5">
-    </div>
-    <div class="setting-group">
-      <label for="sfxVolume">🔊 Sound FX Volume</label>
-      <input type="range" id="sfxVolume" min="0" max="1" step="0.1" value="0.7">
-    </div>
-    <div class="setting-group">
-      <label for="difficulty">🔥 Difficulty</label>
-      <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="normal" selected>Normal</option>
-        <option value="hard">Hard</option>
-        <option value="nightmare">Nightmare</option>
-      </select>
-    </div>
-    <button class="closeBtn">Close</button>
+  <div id="settings-menu" class="screen hidden">
+    <h2>Settings</h2>
+    <label>
+      <span>Music Volume</span>
+      <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.5" />
+    </label>
+    <label>
+      <span>Sound Effects</span>
+      <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="0.5" />
+    </label>
+    <button id="close-settings" class="menu-btn">Back</button>
   </div>
 
-  <!-- ============================= -->
+  <!-- TUTORIAL MENU -->
+  <div id="tutorial-menu" class="screen hidden">
+    <h2>How to Play</h2>
+    <ul>
+      <li>Use <b>WASD</b> to move (PC).</li>
+      <li>Use on-screen joystick (Mobile).</li>
+      <li>Collect power-ups and avoid traps.</li>
+      <li>Defeat clones and reach the portal.</li>
+    </ul>
+    <button id="close-tutorial" class="menu-btn">Got it!</button>
+  </div>
+
   <!-- CREDITS MENU -->
-  <!-- ============================= -->
-  <div id="creditsMenu" class="menu hidden">
-    <h2 class="menu-title">Credits</h2>
-    <p>Developed by: <b>You + GPT-5 (AAA Dev Edition)</b></p>
-    <p>Art & Sprites: Custom 2D Illustrations</p>
-    <p>Sound & Music: AI Generated + Polished</p>
-    <button class="closeBtn">Close</button>
+  <div id="credits-menu" class="screen hidden">
+    <h2>Credits</h2>
+    <p>Developed by: You + Divine AAA Game Dev</p>
+    <p>Art, Sound, Code: Custom AAA Build</p>
+    <button id="close-credits" class="menu-btn">Back</button>
   </div>
 
-  <!-- ============================= -->
-  <!-- PAUSE MENU -->
-  <!-- ============================= -->
-  <div id="pauseMenu" class="menu hidden">
-    <h2 class="menu-title">Game Paused</h2>
-    <button id="resumeBtn" class="btn">Resume</button>
-    <button id="restartBtn" class="btn">Restart</button>
-    <button id="quitBtn" class="btn">Quit</button>
-  </div>
-
-  <!-- ============================= -->
-  <!-- GAME OVER MENU -->
-  <!-- ============================= -->
-  <div id="gameOverMenu" class="menu hidden">
-    <h2 class="menu-title">Game Over 💀</h2>
-    <p id="finalScore">Your Score: 0</p>
-    <button id="retryBtn" class="btn">Try Again</button>
-    <button id="quitToMenuBtn" class="btn">Quit to Menu</button>
-  </div>
-
-  <!-- ============================= -->
-  <!-- VICTORY MENU -->
-  <!-- ============================= -->
-  <div id="victoryMenu" class="menu hidden">
-    <h2 class="menu-title">🎉 Level Complete 🎉</h2>
-    <p id="levelStats">Stats: Time 0s | Score 0</p>
-    <button id="nextLevelBtn" class="btn">Next Level</button>
-    <button id="quitToMenuBtn2" class="btn">Quit to Menu</button>
-  </div>
-
-  <!-- ============================= -->
   <!-- GAME CONTAINER -->
-  <!-- ============================= -->
-  <div id="gameContainer">
-    <!-- Game Canvas -->
+  <div id="game-container" class="hidden">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Mini-map -->
-    <canvas id="minimap"></canvas>
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-left">
+        <div class="health-bar">
+          <span>Health:</span>
+          <div id="health-fill"></div>
+        </div>
+        <div class="energy-bar">
+          <span>Energy:</span>
+          <div id="energy-fill"></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <canvas id="mini-map"></canvas>
+      </div>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div id="pause-menu" class="overlay hidden">
+      <h2>Game Paused</h2>
+      <button id="resume-btn" class="menu-btn">Resume</button>
+      <button id="restart-btn" class="menu-btn">Restart</button>
+      <button id="pause-settings-btn" class="menu-btn">Settings</button>
+      <button id="quit-btn" class="menu-btn">Quit</button>
+    </div>
   </div>
 
-  <!-- ============================= -->
   <!-- MOBILE JOYSTICK -->
-  <!-- ============================= -->
-  <div id="joystickContainer">
+  <div id="joystick-container" class="hidden">
     <div id="joystick"></div>
   </div>
 
-  <!-- ============================= -->
-  <!-- FOOTER INFO -->
-  <!-- ============================= -->
+  <!-- GAME OVER SCREEN -->
+  <div id="game-over" class="overlay hidden">
+    <h2>Game Over</h2>
+    <p id="final-score">Score: 0</p>
+    <button id="retry-btn" class="menu-btn">Retry</button>
+    <button id="go-menu-btn" class="menu-btn">Main Menu</button>
+  </div>
+
+  <!-- LEVEL COMPLETE SCREEN -->
+  <div id="level-complete" class="overlay hidden">
+    <h2>Level Complete!</h2>
+    <p id="level-stats">Stats here...</p>
+    <button id="next-level-btn" class="menu-btn">Next Level</button>
+  </div>
+
+  <!-- FOOTER -->
   <footer>
-    <p>Shadow Clone Escape © 2025 | AAA Web Game Experience</p>
+    <p>&copy; 2025 Ninja Clone Escape. All Rights Reserved.</p>
   </footer>
 
+  <!-- SCRIPT -->
   <script src="script.js"></script>
 </body>
 </html>
