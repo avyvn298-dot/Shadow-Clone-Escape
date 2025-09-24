@@ -12,7 +12,6 @@ const ASSETS = {
   clones: "assets/clones_spritesheet.png",     // clones spritesheet (e.g. 1060x433)
   portal: "assets/portal.png",                 // portal sprite (e.g. 361x316)
   background: "background.png",                // large background image (optional)
-  bgLayers: ["assets/bg_layer1.png","assets/bg_layer2.png","assets/bg_layer3.png"],
 
   // audio (optional) - browsers require user gesture to start playback
   bgMusic: "assets/bg_music_loop.wav",
@@ -291,6 +290,29 @@ function generateMaze(c, r){
   grid[1][1] = 0; if(grid[1][2] !== undefined) grid[1][2] = 0; if(grid[2]) grid[2][1] = 0;
   return grid;
 }
+// Example level data (grid-based)
+const levels = [
+  [
+    "##########",
+    "#........#",
+    "#..##....#",
+    "#..P.....#",
+    "#........#",
+    "##########"
+  ],
+  [
+    "############",
+    "#..........#",
+    "#..##..##..#",
+    "#....P.....#",
+    "#..........#",
+    "############"
+  ]
+];
+
+// Track current level
+let currentLevel = 0;
+let maze = levels[currentLevel];
 
 /* cache maze to offscreen canvas for performance */
 function cacheMaze(){
@@ -808,6 +830,15 @@ function gameOver(){
     showToast('NEW RECORD!');
     addToLeaderboard(elapsed);
   }
+}
+function nextLevel() {
+  currentLevel++;
+  if (currentLevel >= levels.length) {
+    console.log("🎉 Game complete!");
+    currentLevel = 0; // restart from first
+  }
+  maze = levels[currentLevel];
+  cacheMaze();
 }
 
 /* transition to next level — geometry-dash style */
