@@ -1,102 +1,149 @@
-/* style.css — Polished AAA UI for Shadow Clone Escape
-   - panel-hidden hides overlays by default (fixes stuck settings bug)
-   - Responsive layout, glass panels, subtle animations
-*/
-
-/* ---------- VARIABLES ---------- */
-:root{
-  --bg1: #05060a;
-  --bg2: #0b0b0f;
-  --card: rgba(255,255,255,0.03);
-  --accent: #66ff99;
-  --accent2: #4ef0b8;
-  --muted: #9aa;
-  --danger: #ff6b6b;
-  --radius: 12px;
-  --shadow: 0 18px 48px rgba(0,0,0,0.6);
-  --mono: "Roboto Mono", monospace;
+/* 🎨 Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* ---------- RESET ---------- */
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background: linear-gradient(180deg,var(--bg1),var(--bg2)); color:#e8eef8; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
-a{color:inherit}
-
-/* ---------- COMMON BUTTONS ---------- */
-button{cursor:pointer;border:0;padding:8px 12px;border-radius:10px;font-weight:700;background:var(--card); color:#fff}
-.btn{display:inline-flex;align-items:center;gap:8px}
-.btn.primary{background:linear-gradient(90deg,var(--accent2),var(--accent)); color:#042; padding:10px 16px; border-radius:12px; box-shadow: 0 10px 30px rgba(102,255,153,0.06)}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.03); color:var(--muted); padding:8px 12px}
-.btn.small{padding:8px 10px;font-size:13px}
-.btn.large{padding:12px 20px;font-size:16px}
-
-/* ---------- OVERLAY / TITLE ---------- */
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200;padding:18px}
-.titleCard{width:min(980px,96%);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:16px;padding:18px;box-shadow:var(--shadow);backdrop-filter: blur(6px)}
-.titleRow{display:flex;gap:12px;align-items:center}
-.titleLogo h1{margin:0;font-size:34px}
-.titleLogo .tag{color:var(--muted);margin-top:6px}
-.titlePreview{flex:1;display:flex;justify-content:center;align-items:center}
-.controlsRow{display:flex;gap:10px;justify-content:center;margin-top:12px}
-.preloader{margin-top:10px}
-.progressBar{height:8px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
-.progressBar > div{height:100%;width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 260ms linear}
-.metaRow{display:flex;justify-content:space-between;margin-top:12px}
-
-/* ---------- MODALS ---------- */
-.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:210; background: rgba(0,0,0,0.6)}
-.modalCard{width:min(820px,94%);background: #0f1115; padding:18px; border-radius:12px; box-shadow:var(--shadow)}
-.settingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.modalBtns{display:flex;justify-content:flex-end;margin-top:12px}
-.panel-hidden{display:none !important}
-
-/* ---------- MAIN LAYOUT ---------- */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);box-shadow: 0 6px 20px rgba(0,0,0,0.35)}
-.brand{font-weight:800}
-.smallText{font-size:13px;color:var(--muted)}
-.stage{display:flex;gap:18px;align-items:flex-start;justify-content:center;padding:18px}
-canvas#gameCanvas{border-radius:12px;background:linear-gradient(180deg,#020203,#071011);box-shadow:var(--shadow);max-width:100%;height:auto;border:2px solid rgba(255,255,255,0.02)}
-
-/* ---------- SIDE PANEL ---------- */
-.sidePanel{width:320px;display:flex;flex-direction:column;gap:12px}
-.panelCard{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.55)}
-.hudTitle{font-weight:800}
-.status{font-weight:700;color:var(--muted);margin-top:6px}
-.timer{font-family:var(--mono);font-weight:700;margin-top:8px}
-.panelButtons{display:flex;gap:8px;margin-top:10px}
-.powerupBox{min-height:24px;margin-top:4px;font-weight:700;color:var(--accent)}
-.leaderboard{list-style:none;padding:6px;margin:0;color:var(--muted);max-height:160px;overflow:auto}
-.leaderboard li{padding:6px 4px;border-bottom:1px dashed rgba(255,255,255,0.02)}
-
-/* ---------- MOBILE ---------- */
-.mobile{position:fixed;left:16px;bottom:16px;display:flex;gap:14px;z-index:80}
-.dpad button{width:56px;height:56px;border-radius:10px;background:#111;color:#ddd;font-weight:800;border:1px solid rgba(255,255,255,0.03);font-size:18px}
-.power{background:linear-gradient(180deg,#ffb86b,#ff8a6b);padding:10px 14px;border-radius:10px}
-
-/* ---------- TOASTS ---------- */
-.notifArea{position:fixed;left:20px;bottom:20px;z-index:250}
-.notif{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));padding:8px 12px;border-radius:8px;margin-top:8px;color:#fff;backdrop-filter: blur(4px)}
-
-/* ---------- MINIMAP (hidden visual) ---------- */
-canvas#miniMap{display:block;border-radius:8px;margin-top:12px}
-
-/* ---------- HELPERS ---------- */
-.hidden{display:none}
-.center{display:flex;align-items:center;justify-content:center}
-
-/* ---------- ANIMATIONS ---------- */
-@keyframes pulse {
-  0% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(-6px); opacity: 0.92; }
-  100% { transform: translateY(0); opacity: 1; }
+body {
+  background: url('background.png') no-repeat center center fixed,
+              linear-gradient(135deg, #0a0a0a, #1a1a1a);
+  background-size: cover;
+  color: #fff;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.btn:hover{transform:translateY(-3px);transition:transform .18s}
-.titleLogo h1{letter-spacing:0.6px}
-.small{font-size:13px}
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 900px){
-  .stage{flex-direction:column;align-items:center}
-  .sidePanel{width:92%;max-width:420px}
-  .mobile{left:10px;bottom:10px}
+/* 🌌 Overlay for luxury feel */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%);
+  pointer-events: none;
+}
+
+/* ===================== MENUS ===================== */
+.menu-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(10, 10, 10, 0.85);
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  border-radius: 20px;
+  padding: 30px 50px;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+  animation: fadeIn 1s ease;
+  width: 90%;
+  max-width: 500px;
+}
+
+.menu-screen.hidden {
+  display: none;
+}
+
+.game-title {
+  font-size: 2.5em;
+  margin-bottom: 25px;
+  text-shadow: 0 0 20px #FFD700, 0 0 40px #FF8C00;
+  letter-spacing: 2px;
+}
+
+/* ===================== BUTTONS ===================== */
+.menu-btn {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background: linear-gradient(135deg, #FFD700, #FF8C00);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.menu-btn:hover {
+  background: linear-gradient(135deg, #FF8C00, #FFD700);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+  transform: scale(1.05);
+}
+
+/* ===================== GAME CONTAINER ===================== */
+#game-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#gameCanvas {
+  display: block;
+  margin: auto;
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+#minimap {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  border: 2px solid #FFD700;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+}
+
+/* ===================== JOYSTICK (Mobile) ===================== */
+#joystick-container {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+#joystick {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 215, 0, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+/* ===================== OVERLAYS ===================== */
+#pause-overlay {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  padding: 25px 40px;
+  border-radius: 15px;
+  text-align: center;
+  border: 2px solid #FFD700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+}
+
+#pause-overlay.hidden {
+  display: none;
+}
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -40%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
 }
