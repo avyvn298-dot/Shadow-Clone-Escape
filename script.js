@@ -79,6 +79,13 @@ const dpad = document.getElementById('dpad');
 const STORAGE = { settings: 'shadow_clone_settings_v1', best: 'shadow_clone_best_v1', leader: 'shadow_clone_leader_v1' };
 
 /* ========================= DEFAULT SETTINGS ========================= */
+function openSettings() {
+  document.getElementById("settingsMenu").style.display = "block";
+}
+
+function closeSettings() {
+  document.getElementById("settingsMenu").style.display = "none";
+}
 let SETTINGS = {
   music: true,
   sfx: true,
