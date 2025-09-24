@@ -1,23 +1,21 @@
 /* ========================================================================
-   Shadow Clone Escape — AAA-polished script.js
-   Full-featured single-file game script. Replace previous script.js.
-   ========================================================================
-   Notes:
-   - Edit ASSETS block below to match your filenames/paths exactly (case-sensitive).
-   - Must be served over HTTP (python -m http.server or GitHub Pages).
-   - Audio will only play after a user gesture (Start button).
+   Shadow Clone Escape — Full script.js (complete)
+   - Works with index.html / style.css provided earlier.
+   - Tolerant to slightly different element IDs (tries multiple selectors).
+   - Edit ASSETS at top to match your filenames/paths exactly (case-sensitive).
    ======================================================================== */
 
-/* =========================
-   CONFIG: Assets & Settings
-   ========================= */
+/* =======================
+   ASSET CONFIG - EDIT PATHS HERE
+   ======================= */
 const ASSETS = {
-  ninja:    "assets/ninja_spritesheet.png",      // sprite (e.g., 1536x534, 4 cols x 1 row)
-  clones:   "assets/clones_spritesheet.png",     // sprite (e.g., 1060x433, 3 cols x 1)
-  portal:   "assets/portal.png",                 // portal sprite
-  bg:       "background.png",             // main background (optional)
+  // Images
+  ninja:    "assets/ninja_spritesheet.png",    // sprite sheet, e.g. 1536x534 (4 cols)
+  clones:   "assets/clones_spritesheet.png",   // clones spritesheet, e.g. 1060x433 (3 cols)
+  portal:   "assets/portal.png",               // portal sprite
+  bg:       "background.png",           // main background
 
-  // audio - replace with your files or leave null to skip
+  // Audio (optional - set to null if missing)
   bgMusic:  "assets/bg_music_loop.wav",
   spawnSfx: "assets/spawn.wav",
   pickupSfx: "assets/powerup.wav",
@@ -25,86 +23,99 @@ const ASSETS = {
   deathSfx:  "assets/death.wav"
 };
 
+/* =======================
+   Utilities to find DOM elements by multiple possible IDs (robust)
+   ======================= */
+function elBy(...ids){
+  for(const id of ids){
+    if(!id) continue;
+    const e = document.getElementById(id) || document.querySelector(`#${id}`);
+    if(e) return e;
+  }
+  return null;
+}
+
+/* =======================
+   DOM references (robust selectors)
+   ======================= */
+const canvas = elBy('gameCanvas', 'game-canvas', 'canvas', 'gameCanvas');
+if(!canvas) throw new Error('Missing canvas element with id "gameCanvas"');
+const ctx = canvas.getContext('2d');
+
+const minimap = elBy('minimap', 'mini-map', 'miniMap');
+const miniCtx = minimap ? minimap.getContext('2d') : null;
+
+const preloader = elBy('preloader', 'loading-screen', 'loadingScreen');
+const startBtn = elBy('startBtn', 'start-btn', 'startBtnOverlay', 'startBtnOverlay');
+const tutorialBtn = elBy('tutorialBtn', 'tutorial-btn');
+const settingsBtn = elBy('settingsBtn', 'settings-btn');
+const creditsBtn = elBy('creditsBtn', 'credits-btn');
+const restartBtn = elBy('restartBtn', 'restart-btn');
+const menuBtn = elBy('menuBtn', 'menu-btn', 'menuBtnHeader', 'menu-btn-header');
+const menuRoot = elBy('menu', 'main-menu', 'menu-root');
+const tutorialRoot = elBy('tutorial', 'tutorial-menu');
+const settingsRoot = elBy('settings', 'settings-menu');
+const titleOverlay = elBy('titleOverlay', 'title-overlay', 'titleOverlay');
+const uiRoot = elBy('ui', 'game-container') || document.body;
+
+const musicToggleEl = elBy('musicToggle', 'music-toggle');
+const sfxToggleEl = elBy('sfxToggle', 'sfx-toggle');
+const difficultyEl = elBy('difficulty', 'difficulty-select', 'difficulty');
+const bestRecordText = elBy('bestRecordText', 'best-record', 'bestRecordText');
+const statusText = elBy('status', 'statusText', 'status');
+const timerText = elBy('timer', 'timerText', 'timer');
+const powerupBox = elBy('powerupBox', 'powerup-box', 'powerupBox');
+const leaderboardList = elBy('leaderboardList', 'leaderboard-list', 'leaderboardList');
+const clearLeaderboardBtn = elBy('clearLeaderboard', 'clear-leaderboard', 'clearLeaderboard');
+
+const mobileControls = elBy('mobileControls', 'mobile-controls');
+const joystickContainer = elBy('joystickContainer', 'joystick-container');
+const joystickEl = elBy('joystick', 'joystick');
+
+const notifArea = document.getElementById('notifArea') || (() => {
+  const d = document.createElement('div'); d.id = 'notifArea'; document.body.appendChild(d); return d;
+})();
+
+/* =======================
+   Storage keys & default settings
+   ======================= */
 const STORAGE = {
-  SETTINGS: "sce_settings_v1",
-  BEST: "sce_best_v1",
-  LEADER: "sce_leader_v1"
+  SETTINGS: 'sce_settings_v1',
+  BEST: 'sce_best_v1',
+  LEADER: 'sce_leader_v1'
 };
 
 let SETTINGS = {
   music: true,
   musicVolume: 0.45,
   sfxVolume: 1.0,
-  difficulty: "normal", // easy, normal, hard, nightmare
+  difficulty: 'normal',     // 'easy'|'normal'|'hard'|'nightmare'
   joystickSensitivity: 0.9
 };
-try {
-  const stored = JSON.parse(localStorage.getItem(STORAGE.SETTINGS));
-  if (stored) SETTINGS = { ...SETTINGS, ...stored };
-} catch(e){ console.warn("settings load error", e); }
+try { const s = JSON.parse(localStorage.getItem(STORAGE.SETTINGS)); if(s) SETTINGS = {...SETTINGS, ...s}; } catch(e){}
 
-/* =========================
-   DOM elements
-   ========================= */
-const el = id => document.getElementById(id);
-const canvas = el("gameCanvas");
-const minimap = el("minimap");
-const uiRoot = el("ui") || document.body;
-const startBtn = el("startBtn");
-const startOverlayBtn = el("startBtnOverlay");
-const tutorialBtn = el("tutorialBtn");
-const settingsBtn = el("settingsBtn");
-const restartBtn = el("restartBtn");
-const menuBtn = el("menuBtn") || el("menuBtnHeader");
-const menuRoot = el("menu");
-const tutorialRoot = el("tutorial");
-const settingsRoot = el("settings");
-const musicToggleEl = el("musicToggle");
-const sfxToggleEl = el("sfxToggle");
-const difficultyEl = el("difficulty");
-const bestRecordText = el("bestRecordText");
-const statusText = el("status");
-const timerText = el("timer");
-const powerupBox = el("powerupBox");
-const mobileControls = el("mobileControls");
-const joystickContainer = el("joystickContainer");
-const joystick = el("joystick");
-const leaderboardList = el("leaderboardList");
-const clearLeaderboardBtn = el("clearLeaderboard");
-const preloader = el("preloader");
-const titleOverlay = el("titleOverlay");
-
-/* safe fallbacks */
-if(!canvas) throw new Error("Missing canvas element with id 'gameCanvas'.");
-if(!minimap) console.warn("No minimap element found (id 'minimap') - minimap will be disabled.");
-
-/* =========================
-   Globals & runtime state
-   ========================= */
-const ctx = canvas.getContext("2d");
-const miniCtx = minimap ? minimap.getContext("2d") : null;
-
+/* =======================
+   Runtime state variables
+   ======================= */
 let pixelRatio = window.devicePixelRatio || 1;
 let cols = 19, rows = 19, tileSize = 30;
 let maze = null;
-let mazeCache = null; // offscreen canvas cache
-
+let mazeCache = null;
 let player = null;
 let movesHistory = [];
 let clones = [];
 let powerups = [];
 let particles = [];
-
 let frameCount = 0;
 let running = false;
 let paused = false;
-let startTime = Date.now();
+let startTime = 0;
 let cloneInterval = 300;
 let activePower = null;
 let PORTAL = null;
-let currentLevelIndex = 0;
+let currentLevel = 0;
 
-/* Levels: you can edit ASCII maps or use procedural generateMaze */
+/* ASCII curated levels (can parse) */
 const ASCII_LEVELS = [
   [
     "###################",
@@ -129,45 +140,42 @@ const ASCII_LEVELS = [
   ]
 ];
 
-/* Procedural levels config (scales) */
+/* Procedural level configs */
 const LEVELS = [
-  { name: "Novice Shadow", scale: 1.0 },
-  { name: "Wandering Echo", scale: 1.14 },
-  { name: "Night Stalker", scale: 1.28 },
-  { name: "Spectral Onslaught", scale: 1.6 },
-  { name: "Ninja's Dread", scale: 2.0 },
-  { name: "Endless", scale: 2.4 }
+  { name:'Novice Shadow', scale:1.0 },
+  { name:'Wandering Echo', scale:1.14 },
+  { name:'Night Stalker', scale:1.28 },
+  { name:'Spectral Onslaught', scale:1.6 },
+  { name:"Ninja's Dread", scale:2.0 },
+  { name:'Endless', scale:2.4 }
 ];
 
 /* Asset containers */
 const IMG = { ninja:null, clones:null, portal:null, bg:null, layers:[] };
-const AUDIO = { bg: null, spawn: null, pickup: null, portal: null, death: null };
+const AUDIO = { bg:null, spawn:null, pickup:null, portal:null, death:null };
+const SPR = { ninja:{cols:4,rows:1,w:0,h:0}, clones:{cols:3,rows:1,w:0,h:0}, portal:{cols:1,rows:1,w:0,h:0} };
 
-/* Sprite metadata (auto-calculated) */
-const SPR = {
-  ninja: { cols: 4, rows: 1, w:0, h:0 },
-  clones: { cols: 3, rows: 1, w:0, h:0 },
-  portal: { cols: 1, rows: 1, w:0, h:0 }
-};
-
-/* Utility */
+/* =======================
+   Basic helpers
+   ======================= */
 const clamp = (v,a,b)=> Math.max(a,Math.min(b,v));
 const randInt = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
 const shuffle = (a)=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const nowSec = ()=> Math.floor((Date.now()-startTime)/1000);
 
-/* =========================
-   Asset loader
-   ========================= */
-function loadImageAsync(src){
+/* =======================
+   Asset loader (promises)
+   ======================= */
+function loadImage(src){
   return new Promise(res=>{
     if(!src){ res(null); return; }
     const i = new Image();
     i.onload = ()=> res(i);
-    i.onerror = ()=> { console.warn("image failed", src); res(null); };
+    i.onerror = ()=> { console.warn('image failed', src); res(null); };
     i.src = src;
   });
 }
-function loadAudioAsync(src){
+function loadAudio(src){
   return new Promise(res=>{
     if(!src){ res(null); return; }
     try{
@@ -179,6 +187,7 @@ function loadAudioAsync(src){
   });
 }
 
+/* Preload all assets (with progress) */
 async function preloadAll(showPreloader=true){
   if(showPreloader && preloader) preloader.style.display = 'flex';
   const tasks = [
@@ -197,47 +206,50 @@ async function preloadAll(showPreloader=true){
   ];
 
   let done = 0;
-  const total = tasks.filter(t => t.path).length || tasks.length;
+  const total = tasks.filter(t=>t.path).length || tasks.length;
 
   for(const t of tasks){
     if(!t.path){ done++; continue; }
     if(t.type === 'img'){
-      const img = await loadImageAsync(t.path);
+      const img = await loadImage(t.path);
       if(img){
         if(t.key === 'ninja') IMG.ninja = img;
-        if(t.key === 'clones') IMG.clones = img;
-        if(t.key === 'portal') IMG.portal = img;
-        if(t.key === 'bg') IMG.bg = img;
-        if(t.key === 'bg1') IMG.layers[0] = img;
-        if(t.key === 'bg2') IMG.layers[1] = img;
-        if(t.key === 'bg3') IMG.layers[2] = img;
-        console.log("Loaded image", t.path);
-      } else {
-        console.warn("Missing image:", t.path);
-      }
+        else if(t.key === 'clones') IMG.clones = img;
+        else if(t.key === 'portal') IMG.portal = img;
+        else if(t.key === 'bg') IMG.bg = img;
+        else if(t.key === 'bg1') IMG.layers[0] = img;
+        else if(t.key === 'bg2') IMG.layers[1] = img;
+        else if(t.key === 'bg3') IMG.layers[2] = img;
+        console.log('Loaded image', t.path);
+      } else console.warn('Missing image:', t.path);
     } else {
-      const aud = await loadAudioAsync(t.path);
-      if(aud){
-        if(t.key === 'bg') AUDIO.bg = aud;
-        if(t.key === 'spawn') AUDIO.spawn = aud;
-        if(t.key === 'pickup') AUDIO.pickup = aud;
-        if(t.key === 'portal') AUDIO.portal = aud;
-        if(t.key === 'death') AUDIO.death = aud;
-        console.log("Loaded audio", t.path);
-      } else {
-        console.warn("Missing audio:", t.path);
-      }
+      const a = await loadAudio(t.path);
+      if(a){
+        if(t.key === 'bg') AUDIO.bg = a;
+        else if(t.key === 'spawn') AUDIO.spawn = a;
+        else if(t.key === 'pickup') AUDIO.pickup = a;
+        else if(t.key === 'portal') AUDIO.portal = a;
+        else if(t.key === 'death') AUDIO.death = a;
+        console.log('Loaded audio', t.path);
+      } else console.warn('Missing audio:', t.path);
     }
     done++;
-    const pct = Math.floor(done/total * 100);
+    const pct = Math.floor((done/total)*100);
     if(preloader) {
       const p = preloader.querySelector('p');
       if(p) p.textContent = `Loading assets... ${pct}%`;
     }
-    await new Promise(r => setTimeout(r, 20)); // small breathing gap
+    await new Promise(r => setTimeout(r, 20));
   }
 
-  // compute sprite frame sizes
+  // audio setup
+  if(AUDIO.bg){ AUDIO.bg.loop = true; AUDIO.bg.volume = SETTINGS.musicVolume; }
+  if(AUDIO.spawn) AUDIO.spawn.volume = SETTINGS.sfxVolume;
+  if(AUDIO.pickup) AUDIO.pickup.volume = SETTINGS.sfxVolume;
+  if(AUDIO.portal) AUDIO.portal.volume = SETTINGS.sfxVolume;
+  if(AUDIO.death) AUDIO.death.volume = SETTINGS.sfxVolume;
+
+  // sprite frame size calc
   if(IMG.ninja){ SPR.ninja.w = Math.floor(IMG.ninja.naturalWidth / SPR.ninja.cols); SPR.ninja.h = Math.floor(IMG.ninja.naturalHeight / SPR.ninja.rows); }
   if(IMG.clones){ SPR.clones.w = Math.floor(IMG.clones.naturalWidth / SPR.clones.cols); SPR.clones.h = Math.floor(IMG.clones.naturalHeight / SPR.clones.rows); }
   if(IMG.portal){ SPR.portal.w = Math.floor(IMG.portal.naturalWidth / SPR.portal.cols); SPR.portal.h = Math.floor(IMG.portal.naturalHeight / SPR.portal.rows); }
@@ -245,159 +257,138 @@ async function preloadAll(showPreloader=true){
   if(preloader) preloader.style.display = 'none';
 }
 
-/* =========================
-   Canvas & grid sizing
-   ========================= */
+/* =======================
+   Canvas & sizing
+   ======================= */
 function resizeCanvas(){
   pixelRatio = window.devicePixelRatio || 1;
-  const maxW = Math.min(window.innerWidth - 40, 1100);
-  const ws = Math.min(maxW, window.innerWidth - 40);
-  canvas.style.width = ws + "px";
-  const logicalW = Math.floor(ws);
-  const logicalH = Math.floor(logicalW * (3/4));
+  const maxW = Math.min(window.innerWidth - 40, 1200);
+  const cssW = Math.min(maxW, window.innerWidth - 40);
+  canvas.style.width = cssW + 'px';
+  const logicalW = Math.floor(cssW);
+  const logicalH = Math.floor(logicalW * 0.62);
   canvas.width = Math.floor(logicalW * pixelRatio);
   canvas.height = Math.floor(logicalH * pixelRatio);
   ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
 
-  // minimap
   if(minimap){
-    const mmW = Math.min(220, Math.floor(ws * 0.26));
-    const mmH = Math.floor(mmW * 0.56);
+    const mmW = Math.min(220, Math.floor(cssW * 0.28));
+    const mmH = Math.floor(mmW * 0.55);
     minimap.width = mmW;
     minimap.height = mmH;
-    minimap.style.width = mmW + "px";
-    minimap.style.height = mmH + "px";
-    miniCtx && miniCtx.setTransform(1,0,0,1,0,0);
+    minimap.style.width = mmW + 'px';
+    minimap.style.height = mmH + 'px';
   }
 
-  // grid size
-  const preferred = window.innerWidth < 720 ? 24 : 30;
+  const preferred = window.innerWidth < 720 ? 24 : 36;
   cols = Math.max(11, Math.floor(logicalW / preferred));
   rows = Math.max(11, Math.floor(logicalH / preferred));
   if(cols % 2 === 0) cols--;
   if(rows % 2 === 0) rows--;
   tileSize = Math.floor(Math.min(logicalW / cols, logicalH / rows));
 }
-window.addEventListener("resize", ()=>{ resizeCanvas(); if(maze) cacheMaze(); });
+window.addEventListener('resize', ()=>{ resizeCanvas(); cacheMaze(); });
 
-/* =========================
-   Maze helpers
-   ========================= */
-/* Procedural: recursive backtracker */
+/* =======================
+   Maze generator / parser / cache
+   ======================= */
 function generateMaze(c, r){
   const grid = Array.from({length:r}, ()=> Array(c).fill(1));
   function carve(x,y){
-    grid[y][x] = 0;
+    grid[y][x]=0;
     const dirs = shuffle([[2,0],[-2,0],[0,2],[0,-2]]);
     for(const [dx,dy] of dirs){
-      const nx = x + dx, ny = y + dy;
-      if(nx > 0 && nx < c-1 && ny > 0 && ny < r-1 && grid[ny][nx] === 1){
-        grid[y + dy/2][x + dx/2] = 0;
+      const nx = x+dx, ny = y+dy;
+      if(nx>0 && nx<c-1 && ny>0 && ny<r-1 && grid[ny][nx]===1){
+        grid[y+dy/2][x+dx/2]=0;
         carve(nx, ny);
       }
     }
   }
   carve(1,1);
-  grid[1][1] = 0; if(grid[1][2] !== undefined) grid[1][2]=0; if(grid[2]) grid[2][1]=0;
+  grid[1][1]=0; if(grid[1][2]!==undefined) grid[1][2]=0; if(grid[2]) grid[2][1]=0;
   return grid;
 }
 
-/* Parse ASCII level into numeric grid (0 path, 1 wall) and locate portal */
 function parseAsciiLevel(ascii){
   if(!ascii || !ascii.length) return null;
-  const h = ascii.length;
-  const w = ascii[0].length;
-  const grid = Array.from({length:h}, (_, y) => Array.from({length:w}, (_, x) => {
+  const h = ascii.length, w = ascii[0].length;
+  const grid = Array.from({length:h}, (_,y) => Array.from({length:w}, (_,x) => {
     const ch = ascii[y][x];
-    if(ch === "#") return 1;
-    if(ch === "." || ch === " ") return 0;
-    if(ch === "P"){
-      PORTAL = { x, y };
-      return 0;
-    }
-    // fallback: treat unknown as floor
+    if(ch === '#') return 1;
+    if(ch === '.' || ch === ' ') return 0;
+    if(ch === 'P'){ PORTAL = { x, y }; return 0; }
     return 0;
   }));
   return grid;
 }
 
-/* Cache maze to an offscreen canvas for performance */
 function cacheMaze(){
-  if(!maze || !Array.isArray(maze) || !maze[0]) {
-    console.warn("cacheMaze: maze not defined or invalid. Skipping cache.");
-    mazeCache = null;
-    return;
-  }
-  mazeCache = document.createElement("canvas");
+  if(!maze || !Array.isArray(maze) || !maze[0]){ mazeCache = null; return; }
+  mazeCache = document.createElement('canvas');
   mazeCache.width = cols * tileSize;
   mazeCache.height = rows * tileSize;
-  const mctx = mazeCache.getContext("2d");
+  const mctx = mazeCache.getContext('2d');
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      const v = maze[y] && typeof maze[y][x] !== "undefined" ? maze[y][x] : 1;
+      const v = (maze[y] && typeof maze[y][x] !== 'undefined') ? maze[y][x] : 1;
       if(v === 1){
-        mctx.fillStyle = "#2e2e2e";
+        mctx.fillStyle = '#2e2e2e';
         mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
-        mctx.fillStyle = "rgba(0,0,0,0.06)";
+        mctx.fillStyle = 'rgba(0,0,0,0.06)';
         mctx.fillRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
       } else {
-        mctx.fillStyle = "#0f0f0f";
+        mctx.fillStyle = '#0f0f0f';
         mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
       }
     }
   }
 }
 
-/* PORTAL placing for procedural maze */
+/* place portal for procedural */
 function placePortalProcedural(){
-  let best = null, bestd = -1;
+  let best=null, bestd=-1;
   for(let y=1;y<rows-1;y++){
     for(let x=1;x<cols-1;x++){
-      if(maze[y][x] === 0 && !(x===1 && y===1)){
+      if(maze[y] && maze[y][x] === 0 && !(x===1 && y===1)){
         const d = Math.abs(x-1) + Math.abs(y-1);
-        if(d > bestd){ bestd = d; best = { x, y }; }
+        if(d > bestd){ bestd = d; best = {x,y}; }
       }
     }
   }
   PORTAL = best;
 }
 
-/* =========================
-   Powerups, Particles
-   ========================= */
+/* =======================
+   Powerups & particles
+   ======================= */
 const POWER_TYPES = ['speed','cloak','shock'];
 function spawnPowerup(){
   let tries = 0;
-  while(tries++ < 500){
+  while(tries++ < 300){
     const x = randInt(1, cols-2);
     const y = randInt(1, rows-2);
-    if(maze[y] && maze[y][x] === 0 && !(x===player.x && y===player.y) && !powerups.some(p=>p.x===x&&p.y===y)){
+    if(maze[y] === 0 && !(x===player.x && y===player.y) && !powerups.some(p=>p.x===x && p.y===y)){
       powerups.push({ x, y, type: POWER_TYPES[randInt(0, POWER_TYPES.length-1)], bob: Math.random()*Math.PI*2, spawned: Date.now() });
-      return;
+      break;
     }
   }
 }
 function applyPowerup(type){
-  if(type === 'speed') activePower = { type:'speed', until: Date.now() + 4500 };
-  else if(type === 'cloak') activePower = { type:'cloak', until: Date.now() + 5000 };
-  else if(type === 'shock'){
-    clones.forEach(c => c.index = Math.max(0, (c.index || 0) - 28));
-    spawnParticles((player.rx||player.x)*tileSize + tileSize/2, (player.ry||player.y)*tileSize + tileSize/2, '#bfe8ff', 24);
+  if(type==='speed') activePower = { type:'speed', until: Date.now() + 4500 };
+  else if(type==='cloak') activePower = { type:'cloak', until: Date.now() + 5000 };
+  else if(type==='shock'){
+    clones.forEach(c=>{ c.index = Math.max(0, (c.index||0) - 28); });
+    spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#bfe8ff', 20);
     if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume);
   }
   if(SETTINGS.sfx && AUDIO.pickup) safePlay(AUDIO.pickup, SETTINGS.sfxVolume);
   showToast(`${type.toUpperCase()}!`);
 }
 
-function spawnParticles(px, py, color='#fff', count=16){
+function spawnParticles(px,py,color,count=18){
   for(let i=0;i<count;i++){
-    particles.push({
-      x: px + (Math.random()-0.5)*tileSize,
-      y: py + (Math.random()-0.5)*tileSize,
-      vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
-      life: 30 + Math.random()*40,
-      color
-    });
+    particles.push({ x:px + (Math.random()-0.5)*tileSize, y:py + (Math.random()-0.5)*tileSize, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:30 + Math.random()*40, color });
   }
 }
 function updateParticles(){
@@ -407,23 +398,15 @@ function updateParticles(){
     if(p.life <= 0) particles.splice(i,1);
   }
 }
-function drawParticles(){
-  for(const p of particles){
-    ctx.globalAlpha = Math.max(0, p.life/70);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 3, 3);
-  }
-  ctx.globalAlpha = 1;
-}
 
-/* =========================
-   Clone Class
-   ========================= */
+/* =======================
+   Clone class
+   ======================= */
 class Clone {
   constructor(path, type='basic'){
     this.path = path.slice();
     this.index = 0;
-    this.type = type; // basic, fast, wraith
+    this.type = type;
     this.spawnFrame = frameCount;
     this.x = this.path[0]?.x ?? 1;
     this.y = this.path[0]?.y ?? 1;
@@ -433,11 +416,9 @@ class Clone {
     else if(this.type === 'wraith'){
       if(Math.random() < 0.01 + Math.min(0.05, frameCount/60000)){
         const jump = Math.min(50, Math.floor(Math.random()*Math.min(200, this.path.length)));
-        this.index = Math.min(this.path.length - 1, this.index + jump);
+        this.index = Math.min(this.path.length-1, this.index + jump);
       } else this.index++;
-    } else {
-      this.index++;
-    }
+    } else this.index++;
     if(this.index < this.path.length){
       this.x = this.path[this.index].x;
       this.y = this.path[this.index].y;
@@ -457,43 +438,76 @@ class Clone {
   }
 }
 
-/* =========================
+/* =======================
    Player & Input
-   ========================= */
+   ======================= */
 let activeDirs = { up:false, down:false, left:false, right:false };
 let lastStepTime = 0;
 let stepMsBase = 140;
 
 function initInput(){
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (e)=>{
     const k = e.key;
-    if(k === 'w' || k === 'W' || k === 'ArrowUp'){ activeDirs.up = true; stepPlayer(); playFoot(); }
-    if(k === 's' || k === 'S' || k === 'ArrowDown'){ activeDirs.down = true; stepPlayer(); playFoot(); }
-    if(k === 'a' || k === 'A' || k === 'ArrowLeft'){ activeDirs.left = true; stepPlayer(); playFoot(); }
-    if(k === 'd' || k === 'D' || k === 'ArrowRight'){ activeDirs.right = true; stepPlayer(); playFoot(); }
+    if(k==='w' || k==='W' || k==='ArrowUp'){ activeDirs.up = true; stepPlayer(); playFoot(); }
+    if(k==='s' || k==='S' || k==='ArrowDown'){ activeDirs.down = true; stepPlayer(); playFoot(); }
+    if(k==='a' || k==='A' || k==='ArrowLeft'){ activeDirs.left = true; stepPlayer(); playFoot(); }
+    if(k==='d' || k==='D' || k==='ArrowRight'){ activeDirs.right = true; stepPlayer(); playFoot(); }
     if(k === ' ') applyPowerup('shock');
     if(k === 'Escape') togglePause();
   });
-  document.addEventListener('keyup', (e) => {
+  document.addEventListener('keyup', (e)=>{
     const k = e.key;
-    if(k === 'w' || k === 'W' || k === 'ArrowUp') activeDirs.up = false;
-    if(k === 's' || k === 'S' || k === 'ArrowDown') activeDirs.down = false;
-    if(k === 'a' || k === 'A' || k === 'ArrowLeft') activeDirs.left = false;
-    if(k === 'd' || k === 'D' || k === 'ArrowRight') activeDirs.right = false;
+    if(k==='w' || k==='W' || k==='ArrowUp') activeDirs.up = false;
+    if(k==='s' || k==='S' || k==='ArrowDown') activeDirs.down = false;
+    if(k==='a' || k==='A' || k==='ArrowLeft') activeDirs.left = false;
+    if(k==='d' || k==='D' || k==='ArrowRight') activeDirs.right = false;
   });
 }
 
-/* mobile joystick */
-let joystickActive = false, joystickPointerId = null, joystickOrigin = {x:0,y:0}, joystickPos={x:0,y:0};
-const joystickMax = 42;
+function playFoot(){ if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume); }
+
+function stepPlayer(){
+  const now = performance.now();
+  const speedFactor = (activePower && activePower.type==='speed' && Date.now() < activePower.until) ? 0.55 : 1;
+  const ms = Math.max(60, Math.floor(stepMsBase * speedFactor - (difficultyNumeric()-1)*8));
+  if(now - lastStepTime < ms) return;
+  lastStepTime = now;
+  if(!running || paused) return;
+
+  let nx = player.x, ny = player.y;
+  if(activeDirs.up) ny--;
+  else if(activeDirs.down) ny++;
+  else if(activeDirs.left) nx--;
+  else if(activeDirs.right) nx++;
+
+  if(nx>=0 && nx<cols && ny>=0 && ny<rows && maze[ny] && maze[ny][nx] === 0){
+    player.x = nx; player.y = ny;
+    movesHistory.push({x:nx, y:ny});
+    for(let i=powerups.length-1;i>=0;i--){
+      const p = powerups[i];
+      if(p.x === nx && p.y === ny){
+        applyPowerup(p.type);
+        powerups.splice(i,1);
+        break;
+      }
+    }
+    if(PORTAL && nx === PORTAL.x && ny === PORTAL.y){
+      if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVolume);
+      transitionToNextLevel();
+    }
+  }
+}
+
+/* =======================
+   Mobile joystick
+   ======================= */
+let joystickActive=false, joystickPointerId=null, joystickOrigin={x:0,y:0}, joystickPos={x:0,y:0};
+const joystickMax = 40;
 
 function initJoystick(){
-  if(!joystickContainer || !joystick) return;
+  if(!joystickContainer || !joystickEl) return;
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if(!isTouch){
-    joystickContainer.classList.add('hidden');
-    return;
-  }
+  if(!isTouch){ joystickContainer.classList.add('hidden'); return; }
   joystickContainer.classList.remove('hidden');
 
   joystickContainer.addEventListener('pointerdown', (ev)=>{
@@ -510,19 +524,20 @@ function initJoystick(){
   });
   joystickContainer.addEventListener('pointerup', (ev)=>{
     if(ev.pointerId !== joystickPointerId) return;
-    joystickActive = false; joystickPointerId = null; joystickPos={x:0,y:0};
-    joystick.style.transform = `translate(0px,0px)`;
+    joystickActive=false; joystickPointerId=null; joystickPos={x:0,y:0};
+    joystickEl.style.transform = `translate(0px,0px)`;
     activeDirs = { up:false, down:false, left:false, right:false };
   });
-  joystickContainer.addEventListener('pointercancel', ()=>{ joystickActive=false; joystickPointerId=null; joystickPos={x:0,y:0}; joystick.style.transform='translate(0px,0px)'; activeDirs={ up:false,down:false,left:false,right:false }; });
+  joystickContainer.addEventListener('pointercancel', ()=>{ joystickActive=false; joystickPointerId=null; joystickPos={x:0,y:0}; joystickEl.style.transform = `translate(0px,0px)`; activeDirs = { up:false, down:false, left:false, right:false }; });
 }
+
 function updateJoystick(cx, cy){
   const dx = cx - joystickOrigin.x, dy = cy - joystickOrigin.y;
   const dist = Math.sqrt(dx*dx + dy*dy) || 1;
   const nx = dx / dist, ny = dy / dist;
   const r = Math.min(dist, joystickMax) * SETTINGS.joystickSensitivity;
   joystickPos.x = nx * r; joystickPos.y = ny * r;
-  joystick.style.transform = `translate(${joystickPos.x}px, ${joystickPos.y}px)`;
+  joystickEl.style.transform = `translate(${joystickPos.x}px, ${joystickPos.y}px)`;
   activeDirs.up = (ny < -0.45 && Math.abs(ny) > Math.abs(nx));
   activeDirs.down = (ny > 0.45 && Math.abs(ny) > Math.abs(nx));
   activeDirs.left = (nx < -0.45 && Math.abs(nx) > Math.abs(ny));
@@ -530,44 +545,9 @@ function updateJoystick(cx, cy){
   stepPlayer();
 }
 
-function playFoot(){ if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume); }
-
-/* Player step logic */
-function stepPlayer(){
-  const now = performance.now();
-  const speedFactor = (activePower && activePower.type==='speed' && Date.now() < activePower.until) ? 0.55 : 1;
-  const ms = Math.max(60, Math.floor(stepMsBase * speedFactor - (difficultyNumeric()-1)*8));
-  if(now - lastStepTime < ms) return;
-  lastStepTime = now;
-  if(!running || paused) return;
-  let nx = player.x, ny = player.y;
-  if(activeDirs.up) ny--;
-  else if(activeDirs.down) ny++;
-  else if(activeDirs.left) nx--;
-  else if(activeDirs.right) nx++;
-  if(nx>=0 && nx<cols && ny>=0 && ny<rows && maze[ny] && maze[ny][nx] === 0){
-    player.x = nx; player.y = ny;
-    movesHistory.push({ x: nx, y: ny });
-    // pickup powerups
-    for(let i=powerups.length-1;i>=0;i--){
-      const p = powerups[i];
-      if(p.x === nx && p.y === ny){
-        applyPowerup(p.type);
-        powerups.splice(i,1);
-        break;
-      }
-    }
-    // portal reached
-    if(PORTAL && nx === PORTAL.x && ny === PORTAL.y){
-      if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVolume);
-      transitionToNextLevel();
-    }
-  }
-}
-
-/* =========================
-   Spawn clones from history
-   ========================= */
+/* =======================
+   Clone spawn
+   ======================= */
 function spawnClone(){
   if(movesHistory.length < 6) return;
   const len = Math.min(900, movesHistory.length);
@@ -576,19 +556,20 @@ function spawnClone(){
   let type = 'basic';
   if(p < 0.08) type = 'wraith';
   else if(p < 0.22) type = 'fast';
-  clones.push(new Clone(snap, type));
+  const c = new Clone(snap, type);
+  clones.push(c);
   if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume);
   spawnParticles((player.rx||player.x)*tileSize + tileSize/2, (player.ry||player.y)*tileSize + tileSize/2, '#ff4466', 20);
 }
 
-/* =========================
-   Rendering helper: background, maze, powerups, player, minimap
-   ========================= */
+/* =======================
+   Render helpers
+   ======================= */
 function drawBackground(now){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   ctx.save();
   if(IMG.bg){
-    const t = Date.now() / 12000;
+    const t = Date.now()/12000;
     const xoff = Math.sin(t) * 36;
     ctx.drawImage(IMG.bg, -40 + xoff, -20, w + 80, h + 40);
   } else {
@@ -596,7 +577,6 @@ function drawBackground(now){
     g.addColorStop(0,'#071018'); g.addColorStop(1,'#03040a');
     ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
   }
-  // parallax layers
   for(let i=0;i<IMG.layers.length;i++){
     const layer = IMG.layers[i];
     if(!layer) continue;
@@ -615,14 +595,14 @@ function drawMaze(){
   if(mazeCache){ ctx.drawImage(mazeCache, 0, 0); return; }
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      const v = (maze[y] && typeof maze[y][x] !== "undefined") ? maze[y][x] : 1;
+      const v = maze[y] && typeof maze[y][x] !== 'undefined' ? maze[y][x] : 1;
       if(v === 1){
-        ctx.fillStyle = "#2e2e2e";
+        ctx.fillStyle = '#2e2e2e';
         ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
-        ctx.fillStyle = "rgba(0,0,0,0.06)";
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
         ctx.fillRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
       } else {
-        ctx.fillStyle = "#0f0f0f";
+        ctx.fillStyle = '#0f0f0f';
         ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
       }
     }
@@ -633,9 +613,9 @@ function drawPowerups(now){
   for(const pu of powerups){
     const cx = pu.x*tileSize + tileSize/2;
     const cy = pu.y*tileSize + tileSize/2 + Math.sin((frameCount + pu.bob) * 0.12) * 3;
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(Math.sin(frameCount/18 + pu.bob)*0.08);
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(frameCount/18 + pu.bob)*0.08);
     if(pu.type === 'speed'){ ctx.fillStyle = '#4fd1ff'; ctx.beginPath(); ctx.arc(0,0,tileSize*0.24,0,Math.PI*2); ctx.fill(); }
-    else if(pu.type === 'cloak'){ ctx.fillStyle = '#9be7b0'; ctx.fillRect(-tileSize*0.2,-tileSize*0.2,tileSize*0.4,tileSize*0.4); }
+    else if(pu.type === 'cloak'){ ctx.fillStyle = '#9be7b0'; ctx.fillRect(-tileSize*0.2, -tileSize*0.2, tileSize*0.4, tileSize*0.4); }
     else { ctx.fillStyle = '#bfe8ff'; ctx.beginPath(); ctx.moveTo(0,-tileSize*0.22); ctx.lineTo(tileSize*0.14,0); ctx.lineTo(-tileSize*0.14,0); ctx.fill(); }
     ctx.restore();
   }
@@ -663,7 +643,7 @@ function drawMinimap(){
   const cw = mmW / cols, ch = mmH / rows;
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      miniCtx.fillStyle = (maze[y] && maze[y][x] === 1) ? '#222' : '#070707';
+      miniCtx.fillStyle = maze[y][x] === 1 ? '#222' : '#070707';
       miniCtx.fillRect(x*cw, y*ch, cw, ch);
     }
   }
@@ -692,48 +672,59 @@ function drawPlayer(){
   }
 }
 
-/* =========================
-   HUD & toasts
-   ========================= */
+/* =======================
+   HUD helpers
+   ======================= */
 function showToast(text, duration=1600){
-  const notifArea = document.getElementById('notifArea') || (() => { const d=document.createElement('div'); d.id='notifArea'; d.style.position='fixed'; d.style.right='12px'; d.style.bottom='12px'; document.body.appendChild(d); return d; })();
-  const eln = document.createElement('div'); eln.className = 'notif'; eln.textContent = text; notifArea.appendChild(eln);
-  setTimeout(()=>{ eln.style.opacity='0'; eln.style.transform='translateY(-18px)'; setTimeout(()=>eln.remove(),420); }, duration);
+  const n = document.createElement('div'); n.className = 'notif'; n.textContent = text; notifArea.appendChild(n);
+  setTimeout(()=>{ n.style.transition='opacity .45s, transform .45s'; n.style.opacity='0'; n.style.transform='translateY(-18px)'; setTimeout(()=>n.remove(),480); }, duration);
+}
+function setStatusText(s){ if(statusText) statusText.textContent = s; }
+function updateHUD(){
+  const tEl = timerText;
+  if(tEl) tEl.textContent = `Time: ${nowSec()}s`;
+  if(powerupBox){
+    if(activePower && Date.now() < activePower.until){
+      const rem = Math.ceil((activePower.until - Date.now())/1000);
+      powerupBox.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`;
+    } else {
+      powerupBox.innerHTML = '';
+      if(activePower && Date.now() >= activePower.until) activePower = null;
+    }
+  }
 }
 
-/* =========================
-   Main loop
-   ========================= */
+/* =======================
+   Main game loop
+   ======================= */
 let lastFrame = performance.now();
 function animate(now){
   if(!running || paused) return;
-  const dt = (now - lastFrame)/1000;
-  lastFrame = now;
-  frameCount++;
+  const dt = (now - lastFrame)/1000; lastFrame = now; frameCount++;
 
   // spawn powerups occasionally
   if(frameCount % 900 === 0 && Math.random() < 0.88) spawnPowerup();
 
   // clone spawn pacing
-  const intervalFrames = Math.max(8, Math.floor(cloneInterval / (1 + difficultyNumeric()*0.6)));
+  const intervalFrames = Math.max(8, Math.floor(cloneInterval / (1 + difficultyValue()*0.6)));
   if(frameCount % intervalFrames === 0 && movesHistory.length > 8){
     spawnClone();
-    if(cloneInterval > 30) cloneInterval -= 1 + (difficultyNumeric()-1);
-    if(Math.random() < 0.02 + (difficultyNumeric()-1)*0.03) spawnClone();
+    if(cloneInterval > 30) cloneInterval -= 1 + (difficultyValue()-1);
+    if(Math.random() < 0.02 + (difficultyValue()-1)*0.03) spawnClone();
   }
 
-  // update clones
+  // update clones & collision
   for(let i=clones.length-1;i>=0;i--){
     const c = clones[i];
     c.update();
     if(Math.round(c.x) === player.x && Math.round(c.y) === player.y){
       if(!(activePower && activePower.type==='cloak' && Date.now() < activePower.until)){
-        // death sequence
+        // death
         running = false;
         if(SETTINGS.sfx && AUDIO.death) safePlay(AUDIO.death, SETTINGS.sfxVolume);
         showToast(`☠️ You survived ${nowSec()}s`);
-        spawnParticles((player.rx||player.x)*tileSize + tileSize/2, (player.ry||player.y)*tileSize + tileSize/2, '#ffcc66', 48);
-        setTimeout(()=> { gameOver(); }, 800);
+        spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ffcc66', 40);
+        setTimeout(()=>{ gameOver(); }, 800);
         return;
       }
     }
@@ -741,7 +732,7 @@ function animate(now){
 
   updateParticles();
 
-  // render
+  // render pipeline
   ctx.clearRect(0,0, canvas.width/pixelRatio, canvas.height/pixelRatio);
   drawBackground(now);
   drawMaze();
@@ -749,11 +740,11 @@ function animate(now){
   drawPortal(now);
   for(const c of clones) c.draw();
 
-  // player smooth lerp
-  const speed = 12 + (difficultyNumeric()-1)*6;
+  // smooth player pos
+  const speed = 12 + (difficultyValue()-1)*6;
   const t = Math.min(1, dt * speed);
-  player.rx = (player.rx === undefined) ? player.x : (player.rx + (player.x - player.rx) * t);
-  player.ry = (player.ry === undefined) ? player.y : (player.ry + (player.y - player.ry) * t);
+  player.rx = player.rx === undefined ? player.x : (player.rx + (player.x - player.rx) * t);
+  player.ry = player.ry === undefined ? player.y : (player.ry + (player.y - player.ry) * t);
 
   // trail
   for(let i=Math.max(0, movesHistory.length-30); i<movesHistory.length; i++){
@@ -773,10 +764,10 @@ function animate(now){
   requestAnimationFrame(animate);
 }
 
-/* =========================
-   Difficulty numeric mapping
-   ========================= */
-function difficultyNumeric(){
+/* =======================
+   Difficulty mapping
+   ======================= */
+function difficultyValue(){
   switch(SETTINGS.difficulty){
     case 'easy': return 0.8;
     case 'normal': return 1;
@@ -786,36 +777,35 @@ function difficultyNumeric(){
   }
 }
 
-/* =========================
-   Game lifecycle: startLevel, transition, gameOver
-   ========================= */
-function startLevel(index = 0, useAscii=false){
-  currentLevelIndex = clamp(index, 0, LEVELS.length-1);
+/* =======================
+   Level / lifecycle functions
+   ======================= */
+function startLevel(index=0, useAscii=false){
+  currentLevel = clamp(index, 0, LEVELS.length-1);
   resizeCanvas();
-  const L = LEVELS[currentLevelIndex];
-  // choose ASCII if requested for curated level
-  if(useAscii && ASCII_LEVELS[currentLevelIndex]){
-    maze = parseAsciiLevel(ASCII_LEVELS[currentLevelIndex]);
+  const L = LEVELS[currentLevel];
+  if(useAscii && ASCII_LEVELS[currentLevel]){
+    maze = parseAsciiLevel(ASCII_LEVELS[currentLevel]);
   } else {
     cols = Math.max(11, Math.floor(19 * L.scale));
     rows = Math.max(11, Math.floor(19 * L.scale));
-    if(cols % 2 === 0) cols--;
-    if(rows % 2 === 0) rows--;
+    if(cols%2===0) cols--;
+    if(rows%2===0) rows--;
     maze = generateMaze(cols, rows);
     placePortalProcedural();
   }
   cacheMaze();
-  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6, tileSize*0.36), color: '#66ff99' };
+  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6, tileSize*0.36), color:'#66ff99' };
   movesHistory = [];
   clones = [];
   powerups = [];
   particles = [];
   frameCount = 0;
-  cloneInterval = Math.max(40, 300 - Math.floor(difficultyNumeric() * 80));
+  cloneInterval = Math.max(40, 300 - Math.floor(difficultyValue() * 80));
   running = true; paused = false; startTime = Date.now(); activePower = null;
   if(preloader) preloader.style.display = 'none';
   if(bestRecordText) bestRecordText.textContent = localStorage.getItem(STORAGE.BEST) ? `Best: ${localStorage.getItem(STORAGE.BEST)}s` : 'Best: —';
-  if(statusText) statusText.textContent = `Level: ${LEVELS[currentLevelIndex].name}`;
+  setStatusText(`Level: ${LEVELS[currentLevel].name}`);
   lastFrame = performance.now();
   requestAnimationFrame(animate);
   tickLoop();
@@ -824,11 +814,11 @@ function startLevel(index = 0, useAscii=false){
 function transitionToNextLevel(){
   running = false;
   if(SETTINGS.sfx && AUDIO.portal) safePlay(AUDIO.portal, SETTINGS.sfxVolume);
-  let t=0; const dur=36;
+  let t = 0, dur = 36;
   function anim(){
     ctx.save();
     const s = 1 + 0.08 * Math.sin(Math.PI * (t/dur));
-    const cx = (cols * tileSize)/2, cy = (rows * tileSize)/2;
+    const cx = (cols*tileSize)/2, cy = (rows*tileSize)/2;
     ctx.setTransform(s,0,0,s, -(s-1)*cx, -(s-1)*cy);
     drawBackground(performance.now());
     drawMaze();
@@ -838,8 +828,8 @@ function transitionToNextLevel(){
     t++;
     if(t <= dur) requestAnimationFrame(anim);
     else {
-      startLevel(Math.min(LEVELS.length-1, currentLevelIndex + 1));
-      showToast(`Level Up: ${LEVELS[currentLevelIndex].name}`);
+      startLevel(Math.min(LEVELS.length-1, currentLevel + 1));
+      showToast(`Level Up: ${LEVELS[currentLevel].name}`);
     }
   }
   anim();
@@ -847,30 +837,20 @@ function transitionToNextLevel(){
 
 function gameOver(){
   running = false;
-  // store leaderboard & best
   const elapsed = nowSec();
   const prevBest = Number(localStorage.getItem(STORAGE.BEST)) || 0;
   if(elapsed > prevBest){
     localStorage.setItem(STORAGE.BEST, elapsed);
-    showToast("NEW RECORD!");
+    showToast('NEW RECORD!');
     addToLeaderboard(elapsed);
   }
-  // show restart UI
   restartBtn && (restartBtn.style.display = 'inline-block');
   menuBtn && (menuBtn.style.display = 'inline-block');
 }
 
-/* nextLevel helper for ASCII -> parse */
-function nextAsciiLevel(){
-  currentLevelIndex++;
-  if(currentLevelIndex >= ASCII_LEVELS.length) currentLevelIndex = 0;
-  maze = parseAsciiLevel(ASCII_LEVELS[currentLevelIndex]);
-  cacheMaze();
-}
-
-/* =========================
-   Tick loop for continuous stepping
-   ========================= */
+/* =======================
+   Tick Loop for holding movement
+   ======================= */
 let lastTick = 0;
 function tickLoop(){
   if(!running || paused) return;
@@ -882,22 +862,22 @@ function tickLoop(){
   requestAnimationFrame(tickLoop);
 }
 
-/* =========================
+/* =======================
    Audio safe-play
-   ========================= */
+   ======================= */
 function safePlay(a, vol=1){
   if(!a) return;
   try{ a.volume = vol; a.currentTime = 0; a.play().catch(()=>{}); }catch(e){}
 }
 
-/* =========================
-   Leaderboard
-   ========================= */
+/* =======================
+   Leaderboard & localstore
+   ======================= */
 function addToLeaderboard(time){
   let list = JSON.parse(localStorage.getItem(STORAGE.LEADER) || '[]');
-  let name = prompt("New high score! Enter your name (max 12 chars):", "Player") || "Player";
+  let name = prompt('New high score! Enter your name (max 12 chars):','Player') || 'Player';
   name = name.slice(0,12);
-  list.push({ name, time });
+  list.push({name, time});
   list.sort((a,b)=> b.time - a.time);
   localStorage.setItem(STORAGE.LEADER, JSON.stringify(list.slice(0,50)));
   updateLeaderboardUI();
@@ -912,60 +892,30 @@ function updateLeaderboardUI(){
     leaderboardList.appendChild(li);
   });
 }
-clearLeaderboardBtn && clearLeaderboardBtn.addEventListener('click', ()=>{ if(confirm('Clear local leaderboard?')){ localStorage.removeItem(STORAGE.LEADER); updateLeaderboardUI(); } });
 
-/* =========================
-   HUD update
-   ========================= */
-function updateHUD(){
-  const timerEl = timerText || el('timer');
-  if(timerEl) timerEl.textContent = `Time: ${nowSec()}s`;
-  if(powerupBox){
-    if(activePower && Date.now() < activePower.until){
-      const rem = Math.ceil((activePower.until - Date.now()) / 1000);
-      powerupBox.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`;
-    } else {
-      powerupBox.innerHTML = '';
-      if(activePower && Date.now() >= activePower.until) activePower = null;
-    }
-  }
-}
-
-/* =========================
-   Utilities
-   ========================= */
-function nowSec(){ return Math.floor((Date.now() - startTime) / 1000); }
-
-/* =========================
-   UI wiring
-   ========================= */
+/* =======================
+   UI binding & wiring
+   ======================= */
 function wireUI(){
-  // start buttons
-  const startRun = async () => {
-    try {
-      await preloadAll(true);
-    } catch(e){ console.warn("prefetch error", e); }
+  async function startRun(){
+    try{ await preloadAll(true); }catch(e){ console.warn('prefetch error', e); }
     if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume);
-    if(menuRoot) menuRoot.style.display = 'none';
-    if(tutorialRoot) tutorialRoot.style.display = 'none';
-    if(settingsRoot) settingsRoot.style.display = 'none';
-    if(titleOverlay) titleOverlay.style.display = 'none';
-    if(mobileControls) mobileControls.classList.remove('hidden');
-    resizeCanvas();
-    initInput();
-    initJoystick();
-    updateLeaderboardUI();
+    menuRoot && (menuRoot.style.display = 'none');
+    tutorialRoot && (tutorialRoot.style.display = 'none');
+    settingsRoot && (settingsRoot.style.display = 'none');
+    if(uiRoot) uiRoot.style.display = 'block';
+    initInput(); initJoystick(); updateLeaderboardUI();
     startLevel(0);
-  };
+  }
 
   startBtn && startBtn.addEventListener('click', startRun);
-  startOverlayBtn && startOverlayBtn.addEventListener('click', startRun);
 
-  tutorialBtn && tutorialBtn.addEventListener('click', ()=>{ tutorialRoot.style.display = tutorialRoot.style.display === 'none' ? 'block' : 'none'; });
-  settingsBtn && settingsBtn.addEventListener('click', ()=>{ settingsRoot.style.display = settingsRoot.style.display === 'none' ? 'block' : 'none'; });
+  tutorialBtn && tutorialBtn.addEventListener('click', ()=>{ tutorialRoot && (tutorialRoot.style.display = tutorialRoot.style.display === 'none' ? 'block' : 'none'); });
+  settingsBtn && settingsBtn.addEventListener('click', ()=>{ settingsRoot && (settingsRoot.style.display = settingsRoot.style.display === 'none' ? 'block' : 'none'); });
+  creditsBtn && creditsBtn.addEventListener('click', ()=>{ alert('Credits: You + AI-assisted AAA build'); });
 
-  restartBtn && restartBtn.addEventListener('click', ()=>{ startLevel(0); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume); restartBtn.style.display = 'none'; menuBtn && (menuBtn.style.display='none'); });
-  menuBtn && menuBtn.addEventListener('click', ()=>{ running=false; menuRoot.style.display='block'; if(AUDIO.bg) AUDIO.bg.pause(); });
+  restartBtn && restartBtn.addEventListener('click', ()=>{ startLevel(0); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume); restartBtn.style.display='none'; menuBtn && (menuBtn.style.display='none'); });
+  menuBtn && menuBtn.addEventListener('click', ()=>{ running=false; menuRoot && (menuRoot.style.display='block'); AUDIO.bg && AUDIO.bg.pause(); });
 
   musicToggleEl && (musicToggleEl.checked = SETTINGS.music);
   sfxToggleEl && (sfxToggleEl.checked = SETTINGS.sfx);
@@ -975,28 +925,22 @@ function wireUI(){
   sfxToggleEl && sfxToggleEl.addEventListener('change', ()=>{ SETTINGS.sfx = sfxToggleEl.checked; saveSettings(); });
   difficultyEl && difficultyEl.addEventListener('change', ()=>{ SETTINGS.difficulty = difficultyEl.value; saveSettings(); });
 
-  el('clearRecord')?.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE.BEST); bestRecordText && (bestRecordText.textContent = 'Best: —'); showToast("Best record cleared"); });
+  clearLeaderboardBtn && clearLeaderboardBtn.addEventListener('click', ()=>{ if(confirm('Clear local leaderboard?')){ localStorage.removeItem(STORAGE.LEADER); updateLeaderboardUI(); } });
 
-  // debug exposure
   window.__SCE__ = { IMG, AUDIO, spawnPowerup, spawnClone, SETTINGS, startLevel, cacheMaze, maze, player };
 }
 
-/* =========================
-   Save settings helper
-   ========================= */
-function saveSettings(){ try{ localStorage.setItem(STORAGE.SETTINGS, JSON.stringify(SETTINGS)); }catch(e){ console.warn("save settings failed", e); } }
-
-/* =========================
+/* =======================
    Pause toggle
-   ========================= */
+   ======================= */
 function togglePause(){
   paused = !paused;
   if(paused){
     running = false;
-    el('menu') && (el('menu').style.display = 'block');
+    menuRoot && (menuRoot.style.display='block');
     AUDIO.bg && AUDIO.bg.pause();
   } else {
-    el('menu') && (el('menu').style.display = 'none');
+    menuRoot && (menuRoot.style.display='none');
     running = true;
     lastFrame = performance.now();
     requestAnimationFrame(animate);
@@ -1005,17 +949,32 @@ function togglePause(){
   }
 }
 
-/* =========================
-   Boot sequence
-   ========================= */
+/* =======================
+   Difficulty numeric mapping
+   ======================= */
+function difficultyNumeric(){
+  switch(SETTINGS.difficulty){
+    case 'easy': return 0.8;
+    case 'normal': return 1;
+    case 'hard': return 1.5;
+    case 'nightmare': return 2.2;
+    default: return 1;
+  }
+}
+
+/* =======================
+   Helpers & save
+   ======================= */
+function saveSettings(){ try{ localStorage.setItem(STORAGE.SETTINGS, JSON.stringify(SETTINGS)); }catch(e){} }
+
+/* =======================
+   Boot/Init
+   ======================= */
 async function boot(){
   resizeCanvas();
   wireUI();
-  try{
-    await preloadAll(false);
-    console.log("Assets prefetch complete.");
-  }catch(e){ console.warn("prefetch error", e); }
+  try{ await preloadAll(false); console.log('Assets prefetch complete'); }catch(e){ console.warn('prefetch error', e); }
   initJoystick();
-  console.log("Boot complete. Ready.");
+  console.log('Boot complete. Ready.');
 }
 boot();
