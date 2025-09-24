@@ -1,141 +1,78 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Shadow Clone Escape — AAA Polished</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Clone Escape</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Title / Preloader Overlay -->
-  <div id="titleOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Title overlay">
-    <div class="titleCard">
-      <div class="titleRow">
-        <div class="titleLogo">
-          <h1>⚔️ Shadow Clone Escape</h1>
-          <p class="tag">Endless ninja maze — survive, evolve, escape</p>
-          <div class="meta small muted">Press Start to enable audio. Good luck.</div>
-        </div>
-        <div class="titlePreview">
-          <canvas id="previewCanvas" width="420" height="140" aria-hidden="true"></canvas>
-        </div>
-      </div>
 
-      <div class="controlsRow">
-        <button id="startBtn" class="btn primary large">▶ Start Run</button>
-        <button id="continueBtn" class="btn ghost">Continue</button>
-        <button id="tutorialBtn" class="btn ghost small">Tutorial</button>
-        <button id="settingsBtn" class="btn ghost small">Settings</button>
-      </div>
-
-      <div id="preloader" class="preloader">
-        <div class="progressBar"><div id="progressFill"></div></div>
-        <div id="progressText" class="muted">Waiting…</div>
-      </div>
-
-      <div class="metaRow">
-        <div class="small muted">AAA-polished demo — college project</div>
-        <div class="small muted">If an asset is missing the game will still run.</div>
-      </div>
-    </div>
+  <!-- 🎮 Start Menu -->
+  <div id="start-screen" class="menu-screen">
+    <h1 class="game-title">⚔️ Shadow Clone Escape ⚔️</h1>
+    <button id="start-btn" class="menu-btn">Start Game</button>
+    <button id="level-btn" class="menu-btn">Select Level</button>
+    <button id="settings-btn" class="menu-btn">Settings</button>
+    <button id="tutorial-btn" class="menu-btn">Tutorial</button>
   </div>
 
-  <!-- Tutorial Modal (hidden by default) -->
-  <div id="tutorial" class="modal panel-hidden" role="dialog" aria-modal="true">
-    <div class="modalCard">
-      <h2>Tutorial</h2>
-      <ol>
-        <li>Move: Arrow keys or WASD (or on-screen dpad).</li>
-        <li>Collect powerups (speed, cloak, shock).</li>
-        <li>Clones replay your path — avoid them.</li>
-        <li>Reach the portal to advance levels; levels get harder.</li>
-      </ol>
-      <div class="modalBtns">
-        <button id="closeTutorial" class="btn primary small">Close</button>
-      </div>
-    </div>
+  <!-- 🗺️ Level Select -->
+  <div id="level-screen" class="menu-screen hidden">
+    <h2>Select Level</h2>
+    <div id="level-buttons"></div>
+    <button id="back-to-start" class="menu-btn">⬅ Back</button>
   </div>
 
-  <!-- Settings Modal (hidden by default) -->
-  <div id="settings" class="modal panel-hidden" role="dialog" aria-modal="true">
-    <div class="modalCard">
-      <h2>Settings</h2>
-      <div class="settingsGrid">
-        <label><input id="musicToggle" type="checkbox"> Enable Music</label>
-        <label><input id="sfxToggle" type="checkbox"> Enable SFX</label>
-        <label>Music Volume: <input id="musicVolume" type="range" min="0" max="1" step="0.01"></label>
-        <label>SFX Volume: <input id="sfxVolume" type="range" min="0" max="1" step="0.01"></label>
-        <label>Difficulty: <input id="difficulty" type="range" min="1" max="3" step="1"></label>
-      </div>
-      <div class="modalBtns">
-        <button id="closeSettings" class="btn primary small">Save & Close</button>
-      </div>
-    </div>
+  <!-- ⚙️ Settings -->
+  <div id="settings-screen" class="menu-screen hidden">
+    <h2>Settings</h2>
+    <label>
+      <input type="checkbox" id="toggle-music" checked> Music
+    </label>
+    <label>
+      <input type="checkbox" id="toggle-sfx" checked> Sound Effects
+    </label>
+    <label>
+      Difficulty:
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard</option>
+      </select>
+    </label>
+    <button id="back-to-start-settings" class="menu-btn">⬅ Back</button>
   </div>
 
-  <!-- Main Game Root -->
-  <main id="gameRoot">
-    <div class="topbar">
-      <div class="brand">Shadow Clone Escape</div>
-      <div class="topControls">
-        <div id="bestRecordText" class="smallText">Best: —</div>
-        <button id="menuBtnHeader" class="btn small ghost">☰</button>
-      </div>
+  <!-- 📖 Tutorial -->
+  <div id="tutorial-screen" class="menu-screen hidden">
+    <h2>How to Play</h2>
+    <p>🎮 PC: Use <b>WASD</b> or <b>Arrow Keys</b> to move.</p>
+    <p>📱 Mobile: Use the <b>joystick</b> to move.</p>
+    <p>✨ Collect power-ups, avoid traps, and reach the portal to escape!</p>
+    <button id="close-tutorial" class="menu-btn">Got It!</button>
+  </div>
+
+  <!-- 🕹️ Main Game Canvas -->
+  <div id="game-container" class="hidden">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Mini-map -->
+    <canvas id="minimap"></canvas>
+
+    <!-- On-screen Joystick (mobile only) -->
+    <div id="joystick-container" class="hidden">
+      <div id="joystick"></div>
     </div>
 
-    <div class="stage">
-      <canvas id="gameCanvas" width="960" height="640" aria-label="Game canvas"></canvas>
-
-      <aside class="sidePanel">
-        <div class="panelCard">
-          <div class="hudTitle">HUD</div>
-          <div id="status" class="status">Ready</div>
-          <div id="powerupBox" class="powerupBox"></div>
-          <div id="timer" class="timer">Time: 0s</div>
-          <div class="panelButtons">
-            <button id="restartBtn" class="btn ghost">🔄 Restart</button>
-            <button id="pauseBtn" class="btn ghost">⏸ Pause</button>
-          </div>
-        </div>
-
-        <div class="panelCard">
-          <div class="leaderTitle">Local Leaderboard</div>
-          <ol id="leaderboardList" class="leaderboard"></ol>
-          <button id="clearLeaderboard" class="btn small ghost">Clear</button>
-        </div>
-
-        <div class="panelCard">
-          <div class="settingsPreview">Quick Settings</div>
-          <label><input id="musicToggleQuick" type="checkbox"> Music</label>
-          <label><input id="sfxToggleQuick" type="checkbox"> SFX</label>
-          <label>Difficulty: <input id="difficultyQuick" type="range" min="1" max="3" value="1"></label>
-        </div>
-      </aside>
+    <!-- Pause/Restart Overlay -->
+    <div id="pause-overlay" class="hidden">
+      <h2>Game Paused</h2>
+      <button id="resume-btn" class="menu-btn">Resume</button>
+      <button id="restart-btn" class="menu-btn">Restart</button>
+      <button id="quit-btn" class="menu-btn">Quit</button>
     </div>
-
-    <div id="mobileControls" class="mobile hidden" aria-hidden="true">
-      <div id="dpad" class="dpad">
-        <button data-dir="up">▲</button>
-        <div class="row">
-          <button data-dir="left">◀</button>
-          <button data-dir="down">▼</button>
-          <button data-dir="right">▶</button>
-        </div>
-      </div>
-      <div class="rightControls">
-        <button id="btnPower" class="btn power">Shock</button>
-      </div>
-    </div>
-
-    <div id="notifArea" class="notifArea" aria-hidden="true"></div>
-  </main>
-
-  <!-- Audio tags (sources set via JS loader) -->
-  <audio id="bgMusic" preload="auto" loop></audio>
-  <audio id="spawnSfx" preload="auto"></audio>
-  <audio id="pickupSfx" preload="auto"></audio>
-  <audio id="portalSfx" preload="auto"></audio>
-  <audio id="deathSfx" preload="auto"></audio>
+  </div>
 
   <script src="script.js"></script>
 </body>
