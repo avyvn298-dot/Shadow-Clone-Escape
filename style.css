@@ -1,99 +1,99 @@
 /* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-body {
-  overflow: hidden;
-  background: #000;
-  color: #fff;
-}
-
-/* Background */
-#bg-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;
-  overflow: hidden;
-}
-
-.bg-image {
+/* Fullscreen BG */
+body, html {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  filter: brightness(0.6) blur(2px);
+  overflow: hidden;
+  background: url('background.png') no-repeat center center/cover;
 }
 
-/* Menus */
-.menu {
+/* Start Screen */
+#start-screen {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 10;
+}
+#start-screen .overlay {
   text-align: center;
-  padding: 2rem;
+  padding: 30px;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.1);
   border-radius: 20px;
-  backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.6);
-  width: 70%;
-  max-width: 800px;
-  transition: all 0.6s ease-in-out;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
 }
-
-.menu.hidden {
-  display: none;
-}
-
-.menu.active {
-  display: block;
-}
-
 .game-title {
   font-size: 3rem;
-  color: #ffae00;
-  text-shadow: 0 0 20px #ffae00, 0 0 40px #ff4d00;
-  margin-bottom: 2rem;
+  color: #fff;
+  text-shadow: 0 0 15px cyan, 0 0 25px blue;
+  margin-bottom: 20px;
 }
-
-/* Buttons */
-.btn {
+#start-screen button {
   display: block;
-  margin: 1rem auto;
-  padding: 1rem 2rem;
+  margin: 10px auto;
+  padding: 12px 25px;
   font-size: 1.2rem;
+  color: #fff;
+  background: linear-gradient(135deg, #0077ff, #00e5ff);
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  color: #fff;
-  background: linear-gradient(90deg, #ff4d00, #ffae00);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+#start-screen button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px cyan;
 }
 
-.btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #ffae00, 0 0 40px #ff4d00;
+/* Modals */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 20;
 }
-
-.back-btn {
-  background: linear-gradient(90deg, #555, #999);
+.modal.hidden { display: none; }
+.modal-content {
+  background: rgba(30,30,30,0.95);
+  padding: 20px 30px;
+  border-radius: 12px;
+  width: 320px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
 }
-
-.back-btn:hover {
-  box-shadow: 0 0 15px #aaa;
+.modal-content h2 { margin-bottom: 15px; }
+.modal-content .btn-close {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background: crimson;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 /* Canvas */
 #gameCanvas {
   display: block;
-  margin: auto;
-  background: rgba(0, 0, 0, 0.8);
-  border: 4px solid #ffae00;
-  border-radius: 20px;
-  box-shadow: 0 0 40px #ff4d00;
+  margin: 0 auto;
+  background: #0a0a0a;
+  border: 2px solid #00eaff;
+  box-shadow: 0 0 20px cyan inset;
+  border-radius: 15px;
+  z-index: 1;
+}
+
+/* Maze Walls Styling */
+.wall {
+  background: linear-gradient(145deg, #222, #555);
+  box-shadow: 0 0 12px cyan, 0 0 25px blue inset;
 }
