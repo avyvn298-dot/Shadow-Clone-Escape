@@ -240,17 +240,17 @@ class ShadowCloneEscape {
     
     loadAssets() {
         const assetsToLoad = [
-            { type: 'image', key: 'ninjas', src: 'assets/ninjas.png' },
-            { type: 'image', key: 'clones', src: 'assets/clones.png' },
+            { type: 'image', key: 'ninjas', src: 'assets/ninja_spritesheet.png' },
+            { type: 'image', key: 'clones', src: 'assets/clones_spritesheet.png' },
             { type: 'image', key: 'portal', src: 'assets/portal.png' },
             { type: 'image', key: 'powerup_speed', src: 'assets/powerup_speed.png' },
             { type: 'image', key: 'powerup_cloak', src: 'assets/powerup_cloak.png' },
             { type: 'image', key: 'powerup_life', src: 'assets/powerup_life.png' },
-            { type: 'audio', key: 'music', src: 'assets/music.mp3' },
-            { type: 'audio', key: 'spawn', src: 'assets/sfx/spawn.wav' },
-            { type: 'audio', key: 'portal', src: 'assets/sfx/portal.wav' },
-            { type: 'audio', key: 'powerup', src: 'assets/sfx/powerup.wav' },
-            { type: 'audio', key: 'death', src: 'assets/sfx/death.wav' }
+            { type: 'audio', key: 'music', src: 'assets/bg_music_loop.wav' },
+            { type: 'audio', key: 'spawn', src: 'assets/spawn.wav' },
+            { type: 'audio', key: 'portal', src: 'assets/portal.wav' },
+            { type: 'audio', key: 'powerup', src: 'assets/powerup.wav' },
+            { type: 'audio', key: 'death', src: 'assets/death.wav' }
         ];
         
         let loaded = 0;
