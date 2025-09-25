@@ -1,153 +1,69 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Shadow Clone Escape — AAA Student Build</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shadow Clone Escape</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- PRELOADER -->
-  <div id="preloader" class="preloader hidden" aria-hidden="true">
-    <div class="pre-inner">
-      <div class="brand">Shadow Clone Escape</div>
-      <div class="loader"><div class="bar"></div></div>
-      <p id="preloadText">Loading assets...</p>
+  <!-- Background -->
+  <div id="bg-container">
+    <img src="background.png" alt="Background" class="bg-image" />
+  </div>
+
+  <!-- Main Menu -->
+  <div id="menu-container" class="menu active">
+    <h1 class="game-title">⚔️ Shadow Clone Escape ⚔️</h1>
+    <div class="menu-buttons">
+      <button id="start-btn" class="btn glow">▶ Start Game</button>
+      <button id="settings-btn" class="btn glow">⚙ Settings</button>
+      <button id="leaderboard-btn" class="btn glow">🏆 Leaderboard</button>
+      <button id="tutorial-btn" class="btn glow">📜 Tutorial</button>
     </div>
   </div>
 
-  <!-- MAIN MENU -->
-  <div id="mainMenu" class="menu screen">
-    <div class="menu-card">
-      <h1 class="game-title">Shadow Clone Escape</h1>
-      <p class="tag">Dodge your past. Survive the echoes.</p>
-
-      <div class="menu-actions">
-        <button id="btnStart" class="btn primary large">START</button>
-        <div class="row">
-          <button id="btnTutorial" class="btn">Tutorial</button>
-          <button id="btnSettings" class="btn">Settings</button>
-          <button id="btnLeaderboard" class="btn">Leaderboard</button>
-          <button id="btnCredits" class="btn">Credits</button>
-        </div>
-      </div>
-
-      <div class="foot">
-        <small>Place sprites & sounds inside <code>/assets/</code>. Serve the folder via HTTP (GitHub Pages or Live Server).</small>
-      </div>
-    </div>
+  <!-- Settings -->
+  <div id="settings-container" class="menu hidden">
+    <h2>⚙ Settings</h2>
+    <label>
+      Volume:
+      <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.7" />
+    </label>
+    <label>
+      Graphics:
+      <select id="graphics-quality">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high" selected>High</option>
+        <option value="ultra">Ultra</option>
+      </select>
+    </label>
+    <button class="btn back-btn">⬅ Back</button>
   </div>
 
-  <!-- TUTORIAL (hidden) -->
-  <div id="tutorial" class="overlay modal hidden" role="dialog" aria-modal="true">
-    <div class="card">
-      <h2>Tutorial</h2>
-      <ol>
-        <li>Move: <b>WASD</b> or arrow keys. On mobile use the joystick.</li>
-        <li>Each step is recorded — clones replay your path.</li>
-        <li>Collect power-ups: Speed, Cloak (invincible), Shock (push clones back).</li>
-        <li>Reach the portal to advance levels. Survive as long as you can.</li>
-      </ol>
-      <div class="card-actions">
-        <button id="closeTutorial" class="btn">Close</button>
-      </div>
-    </div>
+  <!-- Leaderboard -->
+  <div id="leaderboard-container" class="menu hidden">
+    <h2>🏆 Leaderboard</h2>
+    <ol id="leaderboard-list">
+      <li>Player1 - 5000</li>
+      <li>Player2 - 3200</li>
+      <li>Player3 - 2500</li>
+    </ol>
+    <button class="btn back-btn">⬅ Back</button>
   </div>
 
-  <!-- SETTINGS -->
-  <div id="settings" class="overlay modal hidden" role="dialog" aria-modal="true">
-    <div class="card">
-      <h2>Settings</h2>
-      <label>Music <input id="musicToggle" type="checkbox" checked></label>
-      <label>SFX <input id="sfxToggle" type="checkbox" checked></label>
-      <label>Music volume <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45"></label>
-      <label>SFX volume <input id="sfxVolume" type="range" min="0" max="1" step="0.05" value="1.0"></label>
-      <label>Difficulty
-        <select id="difficulty">
-          <option value="easy">Easy</option>
-          <option value="normal" selected>Normal</option>
-          <option value="hard">Hard</option>
-          <option value="nightmare">Nightmare</option>
-        </select>
-      </label>
-      <div class="card-actions">
-        <button id="closeSettings" class="btn">Save</button>
-      </div>
-    </div>
+  <!-- Tutorial -->
+  <div id="tutorial-container" class="menu hidden">
+    <h2>📜 Tutorial</h2>
+    <p>WASD or Joystick → Move your ninja.</p>
+    <p>Collect powerups, avoid traps, and find the portal to escape.</p>
+    <p>Use your shadow clones wisely!</p>
+    <button class="btn back-btn">⬅ Back</button>
   </div>
 
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="overlay modal hidden" role="dialog" aria-modal="true">
-    <div class="card">
-      <h2>Leaderboard (Local)</h2>
-      <ol id="leaderboardList" class="leader-list"></ol>
-      <div class="card-actions">
-        <button id="clearLeaderboard" class="btn">Clear</button>
-        <button id="closeLeaderboard" class="btn">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CREDITS -->
-  <div id="credits" class="overlay modal hidden" role="dialog" aria-modal="true">
-    <div class="card">
-      <h2>Credits</h2>
-      <p>Design & Code: Student + AAA-assisted workflow</p>
-      <p>Art: Generated spritesheets</p>
-      <div class="card-actions">
-        <button id="closeCredits" class="btn">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- GAME UI -->
-  <div id="ui" class="game-root hidden">
-    <canvas id="gameCanvas" aria-label="Game canvas"></canvas>
-    <div id="hud" class="hud">
-      <div class="hud-left">
-        <div id="status" class="status">Ready</div>
-        <div class="hud-row">
-          <div class="label">Time</div><div id="timer" class="value">0s</div>
-          <div class="label">Power</div><div id="powerupBox" class="value"></div>
-        </div>
-      </div>
-      <div class="hud-center">
-        <button id="pauseBtn" class="btn small">Menu</button>
-      </div>
-      <div class="hud-right">
-        <canvas id="miniMap" width="140" height="90"></canvas>
-      </div>
-    </div>
-
-    <!-- Mobile joystick -->
-    <div id="joystickContainer" class="joystick hidden" aria-hidden="true"><div id="joystick" class="stick"></div></div>
-
-    <!-- Pause overlay -->
-    <div id="menuOverlay" class="overlay hidden">
-      <div class="card">
-        <h2>Paused</h2>
-        <div class="card-actions">
-          <button id="resumeBtn" class="btn">Resume</button>
-          <button id="restartBtn" class="btn">Restart</button>
-          <button id="backMenuBtn" class="btn">Main Menu</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Game over -->
-    <div id="gameOver" class="overlay hidden">
-      <div class="card">
-        <h2>Game Over</h2>
-        <p id="gameOverText">You survived 0s</p>
-        <div class="card-actions">
-          <button id="retryBtn" class="btn">Retry</button>
-          <button id="quitBtn" class="btn">Quit</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="notifArea" class="notif-area" aria-hidden="true"></div>
-  </div>
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="1280" height="720" class="hidden"></canvas>
 
   <script src="script.js"></script>
 </body>
