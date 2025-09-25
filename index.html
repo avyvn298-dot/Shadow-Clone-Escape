@@ -1,69 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shadow Clone Escape</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Background -->
-  <div id="bg-container">
-    <img src="background.png" alt="Background" class="bg-image" />
-  </div>
-
-  <!-- Main Menu -->
-  <div id="menu-container" class="menu active">
-    <h1 class="game-title">⚔️ Shadow Clone Escape ⚔️</h1>
-    <div class="menu-buttons">
-      <button id="start-btn" class="btn glow">▶ Start Game</button>
-      <button id="settings-btn" class="btn glow">⚙ Settings</button>
-      <button id="leaderboard-btn" class="btn glow">🏆 Leaderboard</button>
-      <button id="tutorial-btn" class="btn glow">📜 Tutorial</button>
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <div class="overlay">
+      <h1 class="game-title">⚔️ Shadow Clone Escape ⚔️</h1>
+      <button id="btn-start">Start Run</button>
+      <button id="btn-settings">Settings</button>
+      <button id="btn-leaderboard">Leaderboard</button>
+      <button id="btn-tutorial">Tutorial</button>
     </div>
   </div>
 
-  <!-- Settings -->
-  <div id="settings-container" class="menu hidden">
-    <h2>⚙ Settings</h2>
-    <label>
-      Volume:
-      <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.7" />
-    </label>
-    <label>
-      Graphics:
-      <select id="graphics-quality">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high" selected>High</option>
-        <option value="ultra">Ultra</option>
-      </select>
-    </label>
-    <button class="btn back-btn">⬅ Back</button>
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Settings ⚙️</h2>
+      <label>
+        <input type="checkbox" id="music-toggle" checked>
+        Background Music
+      </label>
+      <label>
+        <input type="checkbox" id="sfx-toggle" checked>
+        Sound Effects
+      </label>
+      <button class="btn-close">Close</button>
+    </div>
   </div>
 
-  <!-- Leaderboard -->
-  <div id="leaderboard-container" class="menu hidden">
-    <h2>🏆 Leaderboard</h2>
-    <ol id="leaderboard-list">
-      <li>Player1 - 5000</li>
-      <li>Player2 - 3200</li>
-      <li>Player3 - 2500</li>
-    </ol>
-    <button class="btn back-btn">⬅ Back</button>
+  <!-- Leaderboard Modal -->
+  <div id="leaderboard-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Leaderboard 🏆</h2>
+      <ul id="leaderboard-list"></ul>
+      <button class="btn-close">Close</button>
+    </div>
   </div>
 
-  <!-- Tutorial -->
-  <div id="tutorial-container" class="menu hidden">
-    <h2>📜 Tutorial</h2>
-    <p>WASD or Joystick → Move your ninja.</p>
-    <p>Collect powerups, avoid traps, and find the portal to escape.</p>
-    <p>Use your shadow clones wisely!</p>
-    <button class="btn back-btn">⬅ Back</button>
+  <!-- Tutorial Modal -->
+  <div id="tutorial-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Tutorial 📜</h2>
+      <p>🕹️ Move Ninja: WASD or Arrow Keys</p>
+      <p>🎯 Goal: Find the portal while avoiding traps!</p>
+      <p>⚡ Powerups: Collect glowing orbs for boosts.</p>
+      <button class="btn-close">Got it!</button>
+    </div>
   </div>
 
   <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="1280" height="720" class="hidden"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
   <script src="script.js"></script>
 </body>
