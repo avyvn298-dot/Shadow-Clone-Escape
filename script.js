@@ -517,10 +517,21 @@ class ShadowCloneEscape {
                 this.player.y = newY;
             }
             
-            // Update trail
-            this.player.trail.push({x: this.player.x, y: this.player.y});
-            if (this.player.trail.length > 200) {
-                this.player.trail.shift();
+            // Update trail - record position every few pixels moved
+            const lastTrailPoint = this.player.trail[this.player.trail.length - 1];
+            const distanceFromLastPoint = this.getDistance(this.player.x, this.player.y, lastTrailPoint.x, lastTrailPoint.y);
+            
+            if (distanceFromLastPoint > 5) { // Only add trail point if moved enough
+                this.player.trail.push({x: this.player.x, y: this.player.y, timestamp: Date.now()});
+                
+                // Limit trail length but keep enough for clones to follow
+                if (this.player.trail.length > 500) {
+                    this.player.trail.shift();
+                    // Update all clone trail indices when we remove from the beginning
+                    this.clones.forEach(clone => {
+                        if (clone.trailIndex > 0) clone.trailIndex--;
+                    });
+                }
             }
             
             // Update animation
@@ -657,56 +668,76 @@ class ShadowCloneEscape {
         clone.frame += deltaTime * 8;
         if (clone.frame >= 10) clone.frame = 0;
         
+        // Special behavior for ghost clones - teleportation
         if (clone.type === 'ghost') {
             clone.teleportTimer += deltaTime;
-            if (clone.teleportTimer >= 2000) {
-                // Teleport closer to player
-                const angle = Math.atan2(this.player.y - clone.y, this.player.x - clone.x);
-                const teleportDistance = 80;
-                const newX = clone.x + Math.cos(angle) * teleportDistance;
-                const newY = clone.y + Math.sin(angle) * teleportDistance;
-                
-                if (!this.checkWallCollision(newX, newY)) {
-                    this.addParticles(clone.x, clone.y, 'smoke', 8);
-                    clone.x = newX;
-                    clone.y = newY;
-                    this.addParticles(clone.x, clone.y, 'smoke', 8);
+            if (clone.teleportTimer >= 3000) { // Teleport every 3 seconds
+                const playerDistance = this.getDistance(clone.x, clone.y, this.player.x, this.player.y);
+                if (playerDistance > 100) {
+                    // Teleport closer to player along their trail
+                    const targetIndex = Math.max(0, Math.floor(this.player.trail.length * 0.7));
+                    if (this.player.trail[targetIndex]) {
+                        this.addParticles(clone.x, clone.y, 'smoke', 8);
+                        clone.x = this.player.trail[targetIndex].x + (Math.random() - 0.5) * 40;
+                        clone.y = this.player.trail[targetIndex].y + (Math.random() - 0.5) * 40;
+                        clone.trailIndex = targetIndex;
+                        this.addParticles(clone.x, clone.y, 'smoke', 8);
+                    }
                 }
-                
                 clone.teleportTimer = 0;
             }
         }
         
-        // Follow player trail
-        if (clone.trailIndex < this.player.trail.length - 1) {
-            const target = this.player.trail[clone.trailIndex];
-            const dx = target.x - clone.x;
-            const dy = target.y - clone.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        // Trail following behavior - this is the core mechanic
+        if (this.player.trail.length > 5) {
+            let targetTrailIndex = clone.trailIndex;
             
-            if (distance < 5) {
-                clone.trailIndex++;
+            // Different speeds for different clone types
+            const trailSpeed = clone.type === 'wraith' ? 0.8 : clone.type === 'ghost' ? 0.6 : 0.5;
+            
+            // Find the current target point on the trail
+            if (targetTrailIndex < this.player.trail.length - 10) {
+                const target = this.player.trail[targetTrailIndex];
+                const dx = target.x - clone.x;
+                const dy = target.y - clone.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 8) {
+                    // Move to next point in trail
+                    clone.trailIndex = Math.min(clone.trailIndex + 1, this.player.trail.length - 1);
+                } else {
+                    // Move toward current trail point
+                    const moveDistance = clone.speed * trailSpeed * deltaTime / 16.67;
+                    if (distance > 0) {
+                        clone.x += (dx / distance) * moveDistance;
+                        clone.y += (dy / distance) * moveDistance;
+                    }
+                }
             } else {
-                const moveDistance = clone.speed * deltaTime / 16.67;
-                clone.x += (dx / distance) * moveDistance;
-                clone.y += (dy / distance) * moveDistance;
-            }
-        } else {
-            // Move directly toward player if caught up
-            const dx = this.player.x - clone.x;
-            const dy = this.player.y - clone.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0) {
-                const moveDistance = clone.speed * deltaTime / 16.67;
-                clone.x += (dx / distance) * moveDistance;
-                clone.y += (dy / distance) * moveDistance;
+                // If caught up to recent trail, move directly toward player
+                const dx = this.player.x - clone.x;
+                const dy = this.player.y - clone.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    const moveDistance = clone.speed * deltaTime / 16.67;
+                    const newX = clone.x + (dx / distance) * moveDistance;
+                    const newY = clone.y + (dy / distance) * moveDistance;
+                    
+                    // Only move if not hitting walls
+                    if (!this.checkWallCollision(newX, clone.y)) {
+                        clone.x = newX;
+                    }
+                    if (!this.checkWallCollision(clone.x, newY)) {
+                        clone.y = newY;
+                    }
+                }
             }
         }
         
         // Check collision with player
         const playerDistance = this.getDistance(clone.x, clone.y, this.player.x, this.player.y);
-        if (playerDistance < 25) {
+        if (playerDistance < 35) {
             this.playerHit();
         }
     }
@@ -883,23 +914,27 @@ class ShadowCloneEscape {
     renderPlayer() {
         if (!this.assets.ninjas) return;
         
-        const frameWidth = this.assets.ninjas.width / 8;
-        const frameHeight = this.assets.ninjas.height / 4;
+        // Ninja spritesheet: 1536 × 534, 4 ninjas in rows, 8 frames each
+        const frameWidth = 192; // 1536 / 8 frames
+        const frameHeight = 133; // 534 / 4 rows
         const frame = Math.floor(this.player.frame);
+        const ninjaRow = 0; // Use first ninja row
         
         this.ctx.save();
         
         if (this.player.cloaked) {
             this.ctx.globalAlpha = 0.3;
+            // Add a slight blue tint when cloaked
+            this.ctx.filter = 'hue-rotate(200deg)';
         }
         
         this.ctx.drawImage(
             this.assets.ninjas,
-            frame * frameWidth, 0,
-            frameWidth, frameHeight,
-            this.player.x - this.player.width / 2,
-            this.player.y - this.player.height / 2,
-            this.player.width, this.player.height
+            frame * frameWidth, ninjaRow * frameHeight,  // Source x, y
+            frameWidth, frameHeight,                      // Source width, height
+            this.player.x - 48,                          // Dest x (centered)
+            this.player.y - 48,                          // Dest y (centered)
+            96, 96                                       // Dest width, height
         );
         
         this.ctx.restore();
@@ -908,8 +943,9 @@ class ShadowCloneEscape {
     renderClones() {
         if (!this.assets.clones) return;
         
-        const frameWidth = this.assets.clones.width / 10;
-        const frameHeight = this.assets.clones.height / 3;
+        // Clone spritesheet: 1060 × 433, 3 clones in rows, 10 frames each
+        const frameWidth = 106; // 1060 / 10 frames
+        const frameHeight = 144; // 433 / 3 rows
         
         this.clones.forEach(clone => {
             const row = clone.type === 'idle' ? 0 : clone.type === 'wraith' ? 1 : 2;
@@ -918,18 +954,21 @@ class ShadowCloneEscape {
             this.ctx.save();
             
             if (this.settings.graphicsQuality === 'high') {
-                // Add shadow/glow effect
+                // Add shadow/glow effect based on clone type
                 this.ctx.shadowColor = clone.type === 'wraith' ? '#e74c3c' : clone.type === 'ghost' ? '#9b59b6' : '#f39c12';
                 this.ctx.shadowBlur = 15;
             }
             
+            // Add ghostly trail effect for clones
+            this.ctx.globalAlpha = clone.type === 'ghost' ? 0.8 : 0.9;
+            
             this.ctx.drawImage(
                 this.assets.clones,
-                frame * frameWidth, row * frameHeight,
-                frameWidth, frameHeight,
-                clone.x - frameWidth / 2,
-                clone.y - frameHeight / 2,
-                frameWidth, frameHeight
+                frame * frameWidth, row * frameHeight,  // Source x, y
+                frameWidth, frameHeight,                 // Source width, height
+                clone.x - 53,                           // Dest x (centered)
+                clone.y - 72,                           // Dest y (centered)
+                106, 144                                // Dest width, height
             );
             
             this.ctx.restore();
