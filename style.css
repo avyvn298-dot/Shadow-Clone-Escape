@@ -1,172 +1,84 @@
-/* =========================
-   GLOBALS
-========================= */
-body, html {
+body {
   margin: 0;
-  padding: 0;
-  background: #0a0a0a;
-  font-family: 'Segoe UI', sans-serif;
-  color: white;
-  overflow: hidden;
-  height: 100%;
-}
-
-.hidden { display: none !important; }
-
-/* =========================
-   LOADING SCREEN
-========================= */
-#loading-screen {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle, #111 0%, #000 100%);
-}
-
-#loading-canvas {
-  border: 4px solid #fff;
-  border-radius: 12px;
-  background: #222;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 1.3rem;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-/* =========================
-   MAIN MENU
-========================= */
-#main-menu {
-  position: fixed;
-  width: 100%; height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: url('background.png') center/cover no-repeat;
-}
-
-.menu-logo {
-  font-size: 3rem;
-  margin-bottom: 40px;
-  text-shadow: 0 0 20px #ff0, 0 0 40px #f0f, 0 0 80px #0ff;
-  animation: glow 3s infinite alternate;
-}
-
-@keyframes glow {
-  from { text-shadow: 0 0 20px #ff0, 0 0 40px #f0f; }
-  to { text-shadow: 0 0 40px #0ff, 0 0 80px #ff0; }
-}
-
-.menu-buttons button {
-  display: block;
-  margin: 12px 0;
-  padding: 15px 40px;
-  font-size: 1.5rem;
-  background: linear-gradient(45deg, #ff0066, #ffcc00);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  color: #fff;
-  text-shadow: 1px 1px 3px #000;
-  transition: transform 0.2s, box-shadow 0.3s;
-}
-
-.menu-buttons button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #ff0, 0 0 40px #f0f;
-}
-
-/* =========================
-   OVERLAYS
-========================= */
-.overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-}
-
-.overlay-content {
+  font-family: Arial, sans-serif;
   background: #111;
-  padding: 30px;
-  border-radius: 15px;
-  width: 500px;
-  max-width: 90%;
-  text-align: center;
-  box-shadow: 0 0 20px #0ff;
-}
-
-.overlay-content h2 {
-  margin-bottom: 20px;
-  text-shadow: 0 0 10px #ff0;
-}
-
-.btn-close {
-  margin-top: 20px;
-  padding: 10px 25px;
-  background: crimson;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-close:hover {
-  background: darkred;
-}
-
-/* =========================
-   GAME
-========================= */
-#game-container {
-  position: fixed;
-  width: 100%; height: 100%;
+  color: #eee;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+}
+
+.title {
+  margin: 20px 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.game-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+canvas {
+  border: 2px solid #555;
   background: #000;
 }
 
-#game-canvas {
-  border: 6px solid #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 30px #0ff;
-  background: #111;
+.hud {
+  margin-top: 10px;
+  font-size: 1.2rem;
 }
 
-#hud {
-  position: absolute;
-  top: 10px; left: 50%;
-  transform: translateX(-50%);
+.menu {
+  margin: 20px 0;
   display: flex;
-  gap: 40px;
-  font-size: 1.3rem;
-  text-shadow: 0 0 10px #ff0;
+  gap: 10px;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width: 768px) {
-  .menu-logo { font-size: 2rem; }
-  .menu-buttons button { font-size: 1.2rem; padding: 12px 25px; }
-  .overlay-content { width: 90%; }
+button {
+  padding: 10px 20px;
+  border: none;
+  background: #444;
+  color: #eee;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #666;
+}
+
+.leaderboard {
+  margin-top: 10px;
+  padding: 10px;
+  border: 2px solid #444;
+  width: 150px;
+  text-align: center;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-box {
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
 }
