@@ -1,126 +1,109 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Shadow Clone Escape — AAA Demo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ninja Clone Escape</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Background image fills viewport -->
-  <div id="bg">
-    <img src="background.png" id="bg-img" alt="background" />
-    <div id="bg-overlay"></div>
+  <!-- =========================
+       LOADING SCREEN
+  ========================== -->
+  <div id="loading-screen">
+    <canvas id="loading-canvas"></canvas>
+    <p class="loading-text">Loading Ninja Clone Escape...</p>
   </div>
 
-  <!-- Top header / small controls -->
-  <header id="ui-header">
-    <div id="brand">⚔️ Shadow Clone Escape</div>
-    <div id="header-controls">
-      <button id="menuBtn" class="hdr-btn">☰ Menu</button>
-      <div id="bestRecordText">Best: —</div>
+  <!-- =========================
+       MAIN MENU
+  ========================== -->
+  <div id="main-menu" class="hidden">
+    <div class="menu-logo">⚔️ Ninja Clone Escape ⚔️</div>
+    <div class="menu-buttons">
+      <button id="btn-start">Start Game</button>
+      <button id="btn-settings">Settings</button>
+      <button id="btn-leaderboard">Leaderboard</button>
+      <button id="btn-howto">How to Play</button>
     </div>
-  </header>
+  </div>
 
-  <!-- Main menu overlay -->
-  <main id="menu" class="panel">
-    <div class="panel-card">
-      <h1 id="title">SHADOW CLONE ESCAPE</h1>
-      <p id="subtitle">Survive as long as you can — clones repeat your path</p>
-      <div class="controls">
-        <button id="startBtn" class="primary">Start Run</button>
-        <button id="tutorialBtn" class="secondary">Tutorial</button>
-        <button id="settingsBtn" class="secondary">Settings</button>
-        <button id="leaderBtn" class="secondary">Leaderboard</button>
-      </div>
-      <div id="menu-foot">Built with ❤️ — AAA polish demo</div>
+  <!-- =========================
+       SETTINGS OVERLAY
+  ========================== -->
+  <div id="settings-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Game Settings ⚙️</h2>
+      <label>Music Volume: <input type="range" min="0" max="1" step="0.01" id="music-volume"></label>
+      <label>SFX Volume: <input type="range" min="0" max="1" step="0.01" id="sfx-volume"></label>
+      <button class="btn-close" data-close="settings-overlay">Close</button>
     </div>
-  </main>
+  </div>
 
-  <!-- In-game UI -->
-  <div id="ui" class="panel-hidden">
+  <!-- =========================
+       LEADERBOARD OVERLAY
+  ========================== -->
+  <div id="leaderboard-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Leaderboard 🏆</h2>
+      <ul id="leaderboard-list"></ul>
+      <button class="btn-close" data-close="leaderboard-overlay">Close</button>
+    </div>
+  </div>
+
+  <!-- =========================
+       HOW TO PLAY
+  ========================== -->
+  <div id="howto-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>How to Play 🎮</h2>
+      <p>Use WASD / Arrow Keys to move.</p>
+      <p>Collect powerups to survive.</p>
+      <p>Reach the portal to escape.</p>
+      <button class="btn-close" data-close="howto-overlay">Close</button>
+    </div>
+  </div>
+
+  <!-- =========================
+       GAME CANVAS
+  ========================== -->
+  <div id="game-container" class="hidden">
+    <canvas id="game-canvas" width="1280" height="720"></canvas>
     <div id="hud">
-      <div id="left-hud">
-        <div id="powerupBox"></div>
-        <div id="status">Ready</div>
-      </div>
-      <div id="center-hud">
-        <div id="timer">Time: 0s</div>
-      </div>
-      <div id="right-hud">
-        <button id="menuBtnHeader" class="hdr-btn">≡</button>
-      </div>
-    </div>
-
-    <canvas id="gameCanvas" width="1280" height="720"></canvas>
-    <!-- mini map appended by script (offscreen canvas exposed) -->
-    <div id="mobileControls" class="hidden">
-      <div id="joystickContainer"><div id="joystick"></div></div>
-      <button id="btnPower" class="power-btn">⚡</button>
+      <span id="score-display">Score: 0</span>
+      <span id="lives-display">Lives: 3</span>
+      <span id="level-display">Level: 1</span>
     </div>
   </div>
-
-  <!-- Menus & overlays -->
-  <section id="tutorial" class="modal hidden">
-    <div class="card">
-      <h2>Tutorial</h2>
-      <ul>
-        <li>WASD / Arrow keys — move</li>
-        <li>Space — Shock power (or tap the ⚡ button)</li>
-        <li>Collect powerups and reach the portal to level up</li>
-      </ul>
-      <button class="closeBtn">Close</button>
-    </div>
-  </section>
-
-  <section id="settings" class="modal hidden">
-    <div class="card">
-      <h2>Settings</h2>
-      <label>Music <input id="musicToggle" type="checkbox" checked /></label>
-      <label>SFX <input id="sfxToggle" type="checkbox" checked /></label>
-      <label>Difficulty
-        <select id="difficulty">
-          <option value="easy">Easy</option>
-          <option value="normal" selected>Normal</option>
-          <option value="hard">Hard</option>
-          <option value="nightmare">Nightmare</option>
-        </select>
-      </label>
-      <button class="closeBtn">Close</button>
-    </div>
-  </section>
-
-  <section id="leaderboard" class="modal hidden">
-    <div class="card">
-      <h2>Leaderboard</h2>
-      <ol id="leaderboardList"></ol>
-      <button id="clearLeaderboard">Clear</button>
-      <button class="closeBtn">Close</button>
-    </div>
-  </section>
-
-  <section id="menuOverlay" class="modal hidden">
-    <div class="card">
-      <h2>Menu</h2>
-      <button id="restartBtn">Restart</button>
-      <button id="menuReturnBtn">Return to Main Menu</button>
-      <button class="closeBtn">Close</button>
-    </div>
-  </section>
-
-  <!-- Preloader (hidden normally) -->
-  <div id="preloader" class="hidden">
-    <div class="loader">Loading… <span id="loaderPct">0%</span></div>
-  </div>
-
-  <!-- Audio elements (you can replace src with your files or leave — script will fallback) -->
-  <audio id="bgMusic" preload="auto" loop></audio>
-  <audio id="spawnSfx" preload="auto"></audio>
-  <audio id="pickupSfx" preload="auto"></audio>
-  <audio id="portalSfx" preload="auto"></audio>
-  <audio id="deathSfx" preload="auto"></audio>
-  <audio id="newRecordSfx" preload="auto"></audio>
 
   <script src="script.js"></script>
+  <script>
+    // Ninja loading animation
+    const loadingCanvas = document.getElementById('loading-canvas');
+    const lctx = loadingCanvas.getContext('2d');
+    loadingCanvas.width = 200;
+    loadingCanvas.height = 200;
+    const ninjaSprite = new Image();
+    ninjaSprite.src = "assets/ninja_spritesheet.png";
+    let frame = 0, tick = 0;
+
+    function drawLoading() {
+      lctx.clearRect(0, 0, loadingCanvas.width, loadingCanvas.height);
+      lctx.drawImage(ninjaSprite, frame*128, 0, 128, 128, 36, 36, 128, 128);
+      tick++;
+      if (tick > 8) {
+        tick = 0;
+        frame = (frame+1) % 4;
+      }
+      requestAnimationFrame(drawLoading);
+    }
+    ninjaSprite.onload = () => drawLoading();
+
+    // Fake loading timer
+    setTimeout(() => {
+      document.getElementById('loading-screen').classList.add('hidden');
+      document.getElementById('main-menu').classList.remove('hidden');
+    }, 4000);
+  </script>
 </body>
 </html>
