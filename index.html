@@ -6,12 +6,11 @@
   <title>Shadow Clone Escape — AAA Student Build</title>
   <link rel="stylesheet" href="style.css">
   <meta name="description" content="Shadow Clone Escape — endless ninja survival maze.">
-  <!-- Optional favicon -->
   <link rel="icon" href="favicon.png" type="image/png">
 </head>
 <body>
   <!-- PRELOADER -->
-  <div id="preloader" class="overlay-preloader">
+  <div id="preloader" class="overlay-preloader hidden">
     <div class="pre-inner">
       <div class="logo">Shadow Clone Escape</div>
       <div class="loader-bar"><div class="loader-fill"></div></div>
@@ -20,7 +19,7 @@
     </div>
   </div>
 
-  <!-- START MENU -->
+  <!-- MAIN MENU -->
   <main id="mainMenu" class="menu screen centered">
     <header class="menu-header">
       <h1 class="title">Shadow Clone Escape</h1>
@@ -29,12 +28,15 @@
 
     <section class="menu-buttons">
       <button id="btnStart" class="btn primary large">START</button>
-      <button id="btnTutorial" class="btn">TUTORIAL</button>
-      <button id="btnSettings" class="btn">SETTINGS</button>
-      <button id="btnCredits" class="btn">CREDITS</button>
+      <div class="menu-row">
+        <button id="btnTutorial" class="btn">TUTORIAL</button>
+        <button id="btnSettings" class="btn">SETTINGS</button>
+        <button id="btnCredits" class="btn">CREDITS</button>
+        <button id="btnLeaderboard" class="btn">LEADERBOARD</button>
+      </div>
+
       <div class="menu-extra">
-        <button id="btnLeaderboard" class="btn small">LEADERBOARD</button>
-        <a class="small muted">Built for college — deliverable ready</a>
+        <small class="muted">Built for college — deliverable ready</small>
       </div>
     </section>
 
@@ -51,7 +53,8 @@
         <li>Move using <b>WASD</b> or arrow keys. On mobile, use the joystick.</li>
         <li>Each step you take is recorded. Clones replay your previous path.</li>
         <li>Collect power-ups: <b>Speed</b>, <b>Cloak</b>, <b>Shock</b>.</li>
-        <li>Reach the glowing portal to advance levels. Don't touch clones (unless cloaked).</li>
+        <li>Reach the glowing portal to advance levels. Avoid clones (unless cloaked).</li>
+        <li>Click Start to begin. Audio requires a start gesture.</li>
       </ol>
       <div class="modal-actions">
         <button id="closeTutorial" class="btn">Close</button>
@@ -63,11 +66,11 @@
   <section id="settings" class="modal hidden">
     <div class="modal-card">
       <h2>Settings</h2>
-      <label>Music: <input id="musicToggle" type="checkbox" checked></label>
-      <label>SFX: <input id="sfxToggle" type="checkbox" checked></label>
-      <label>Music volume: <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45"></label>
-      <label>SFX volume: <input id="sfxVolume" type="range" min="0" max="1" step="0.05" value="1.0"></label>
-      <label>Difficulty:
+      <label class="setting-row">Music: <input id="musicToggle" type="checkbox" checked></label>
+      <label class="setting-row">SFX: <input id="sfxToggle" type="checkbox" checked></label>
+      <label class="setting-row">Music volume: <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45"></label>
+      <label class="setting-row">SFX volume: <input id="sfxVolume" type="range" min="0" max="1" step="0.05" value="1.0"></label>
+      <label class="setting-row">Difficulty:
         <select id="difficulty">
           <option value="easy">Easy</option>
           <option value="normal" selected>Normal</option>
@@ -98,7 +101,7 @@
   <section id="leaderboard" class="modal hidden">
     <div class="modal-card">
       <h2>Leaderboard — Local</h2>
-      <ol id="leaderboardList"></ol>
+      <ol id="leaderboardList" class="leader-list"></ol>
       <div style="display:flex;gap:.5rem;justify-content:center;margin-top:10px">
         <button id="clearLeaderboard" class="btn small">Clear</button>
         <button id="closeLeaderboard" class="btn small">Close</button>
@@ -114,8 +117,14 @@
       <div class="hud-left">
         <div id="status" class="status">Ready</div>
         <div class="bars">
-          <div class="bar-row"><div class="bar-label">Time</div><div id="timer" class="bar-value">0s</div></div>
-          <div class="bar-row"><div class="bar-label">Power</div><div id="powerupBox" class="bar-value"></div></div>
+          <div class="bar-row">
+            <div class="bar-label">Time</div>
+            <div id="timer" class="bar-value">0s</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Power</div>
+            <div id="powerupBox" class="bar-value"></div>
+          </div>
         </div>
       </div>
 
@@ -161,12 +170,10 @@
   <!-- notification area -->
   <div id="notifArea" aria-hidden="true"></div>
 
-  <!-- small attribution/footer -->
   <footer class="footer">
     <small>Use a local static server for best results. Place assets in /assets/ (optional).</small>
   </footer>
 
-  <!-- script -->
   <script src="script.js"></script>
 </body>
 </html>
