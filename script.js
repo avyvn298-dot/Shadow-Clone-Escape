@@ -1,101 +1,75 @@
-/* ========================================================================
-   Shadow Clone Escape — script.js
-   Full game runtime: loader, input, maze, clones, powerups, UI, audio fallbacks.
-   Paste entire file as script.js in repo root.
-   ======================================================================== */
+/* Shadow Clone Escape — Full rebuild
+   script.js
+   Put this file in repo root and ensure your index.html & style.css are the versions provided.
+*/
 
-/* ----------------- CONFIG ----------------- */
+/* ---------------- ASSET CONFIG ---------------- */
 const ASSETS = {
-  ninja: "assets/ninja_spritesheet.png",
-  clones: "assets/clones_spritesheet.png",
-  portal: "assets/portal.png",
-  background: "assets/background.png",
-  bgLayers: ["assets/bg_layer1.png","assets/bg_layer2.png","assets/bg_layer3.png"],
-  bgMusic: "assets/bg_music_loop.wav",
-  spawn: "assets/spawn.wav",
-  pickup: "assets/powerup.wav",
-  portal: "assets/portal.wav",
-  death: "assets/death.wav"
+  ninja: 'assets/ninja_spritesheet.png',   // expected 1536x534, 4 frames horizontally
+  clones: 'assets/clones_spritesheet.png', // expected 1060x433, 3 frames horizontally
+  portal: 'assets/portal.png',             // expected 361x316
+  background: 'assets/background.png',
+  bgLayers: ['assets/bg_layer1.png','assets/bg_layer2.png','assets/bg_layer3.png'],
+  bgMusic: 'assets/bg_music_loop.wav',
+  spawnSfx: 'assets/spawn.wav',
+  pickupSfx: 'assets/powerup.wav',
+  portalSfx: 'assets/portal.wav',
+  deathSfx: 'assets/death.wav'
 };
 
-/* ----------------- DOM helpers ----------------- */
+/* ---------------- DOM ---------------- */
 const $ = id => document.getElementById(id);
 const preloader = $('preloader');
 const preloadText = $('preloadText');
 
-const btnStart = $('btnStart');
-const btnTutorial = $('btnTutorial');
-const btnSettings = $('btnSettings');
-const btnCredits = $('btnCredits');
-const btnLeaderboard = $('btnLeaderboard');
-
-const tutorialEl = $('tutorial');
-const settingsEl = $('settings');
-const creditsEl = $('credits');
-const leaderboardEl = $('leaderboard');
-
-const closeTutorial = $('closeTutorial');
-const closeSettings = $('closeSettings');
-const closeCredits = $('closeCredits');
-const closeLeaderboard = $('closeLeaderboard');
+const btnStart = $('btnStart'), btnTutorial = $('btnTutorial'), btnSettings = $('btnSettings'), btnLeaderboard = $('btnLeaderboard'), btnCredits = $('btnCredits');
+const tutorialEl = $('tutorial'), settingsEl = $('settings'), leaderboardEl = $('leaderboard'), creditsEl = $('credits');
+const closeTutorial = $('closeTutorial'), closeSettings = $('closeSettings'), closeLeaderboard = $('closeLeaderboard'), closeCredits = $('closeCredits');
 
 const mainMenu = $('mainMenu');
 const UI = $('ui');
 const canvas = $('gameCanvas');
 const miniCanvas = $('miniMap');
 
-const hudStatus = $('status');
-const timerText = $('timer');
-const powerupBox = $('powerupBox');
-const pauseBtn = $('pauseBtn');
-const menuOverlay = $('menuOverlay');
-const resumeBtn = $('resumeBtn');
-const restartBtn = $('restartBtn');
-const backMenuBtn = $('backMenuBtn');
+const statusText = $('status'), timerText = $('timer'), powerupBox = $('powerupBox');
+const joystickContainer = $('joystickContainer'), joystickEl = $('joystick');
+const pauseBtn = $('pauseBtn'), menuOverlay = $('menuOverlay'), resumeBtn = $('resumeBtn'), restartBtn = $('restartBtn'), backMenuBtn = $('backMenuBtn');
+const gameOverEl = $('gameOver'), gameOverText = $('gameOverText'), retryBtn = $('retryBtn'), quitBtn = $('quitBtn');
 
-const gameOverEl = $('gameOver');
-const gameOverText = $('gameOverText');
-const retryBtn = $('retryBtn');
-const quitBtn = $('quitBtn');
-
-const leaderboardList = $('leaderboardList');
-const clearLeaderboardBtn = $('clearLeaderboard');
-
-const joystickContainer = $('joystickContainer');
-const joystickEl = $('joystick');
+const leaderboardList = $('leaderboardList'), clearLeaderboardBtn = $('clearLeaderboard');
 
 const notifArea = $('notifArea') || (() => { const d=document.createElement('div'); d.id='notifArea'; document.body.appendChild(d); return d; })();
 
-if(!canvas) { alert('Missing canvas element (#gameCanvas). Make sure index.html includes it.'); throw new Error('Missing canvas'); }
-
-/* ----------------- STORAGE & SETTINGS ----------------- */
-const STORAGE = { SETTINGS:'sce_settings_v1', BEST:'sce_best_v1', LEADER:'sce_leader_v1' };
+/* ---------------- STORAGE & SETTINGS ---------------- */
+const STORAGE_KEYS = { SETTINGS:'sce_settings_v1', BEST:'sce_best_v1', LEADER:'sce_leader_v1' };
 let SETTINGS = { music:true, sfx:true, musicVolume:0.45, sfxVolume:1.0, difficulty:'normal', joystickSensitivity:0.9 };
-try{ const s = JSON.parse(localStorage.getItem(STORAGE.SETTINGS)); if(s) SETTINGS = {...SETTINGS, ...s}; }catch(e){}
+try { const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS)); if(s) SETTINGS = {...SETTINGS, ...s}; } catch(e){}
 
-/* ----------------- AUDIO FALLBACK (WebAudio) ----------------- */
+/* ---------------- AUDIO FALLBACKS ---------------- */
 let audioCtx = null;
 function ensureAudioCtx(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playSynth(type){
-  try{
+  try {
     ensureAudioCtx();
     const ctx = audioCtx;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     const now = ctx.currentTime;
-    o.type = type === 'spawn' ? 'sawtooth' : type === 'portal' ? 'triangle' : type === 'death' ? 'sine' : 'sine';
-    o.frequency.value = type === 'spawn' ? 520 : type === 'pickup' ? 880 : type === 'portal' ? 420 : 140;
+    if(type==='spawn'){ o.type='sawtooth'; o.frequency.value = 640; }
+    else if(type==='pickup'){ o.type='triangle'; o.frequency.value = 980; }
+    else if(type==='portal'){ o.type='sine'; o.frequency.value = 420; }
+    else if(type==='death'){ o.type='sine'; o.frequency.value = 120; }
     g.gain.value = 0.0001;
     o.connect(g); g.connect(ctx.destination);
     g.gain.linearRampToValueAtTime(SETTINGS.sfx ? SETTINGS.sfxVolume * 0.8 : 0, now + 0.001);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.15 + Math.random()*0.12);
-    o.start(now); o.stop(now + 0.15 + Math.random()*0.12);
-  }catch(e){}
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    o.start(now); o.stop(now + 0.18);
+  } catch(e){}
 }
 
-/* ----------------- LOADERS ----------------- */
-function loadImage(src){ return new Promise(res => { if(!src) return res(null); const i=new Image(); i.onload=()=>res(i); i.onerror=()=>{console.warn('Image failed',src); res(null);} ; i.src=src; }); }
-function loadAudio(src){ return new Promise(res => { if(!src) return res(null); try{ const a=new Audio(); a.addEventListener('canplaythrough', ()=>res(a), {once:true}); a.addEventListener('error', ()=>{console.warn('Audio failed',src); res(null);}, {once:true}); a.src = src; }catch(e){ res(null); } }); }
+/* ---------------- LOADERS ---------------- */
+function loadImage(src){ return new Promise(res => { if(!src) return res(null); const i=new Image(); i.onload=()=>res(i); i.onerror=()=>{ console.warn('image failed', src); res(null); }; i.src=src; }); }
+function loadAudio(src){ return new Promise(res => { if(!src) return res(null); try { const a=new Audio(); a.addEventListener('canplaythrough', ()=>res(a), {once:true}); a.addEventListener('error', ()=>{ console.warn('audio failed',src); res(null); }, {once:true}); a.src = src; } catch(e){ res(null); } }); }
 
 const IMG = { ninja:null, clones:null, portal:null, background:null, bgLayers:[] };
 const AUDIO = { bg:null, spawn:null, pickup:null, portal:null, death:null };
@@ -112,61 +86,71 @@ async function preloadAll(show=true){
     {t:'img', k:'bg2', p:ASSETS.bgLayers?.[1]},
     {t:'img', k:'bg3', p:ASSETS.bgLayers?.[2]},
     {t:'audio', k:'bg', p:ASSETS.bgMusic},
-    {t:'audio', k:'spawn', p:ASSETS.spawn},
-    {t:'audio', k:'pickup', p:ASSETS.pickup},
-    {t:'audio', k:'portal', p:ASSETS.portal},
-    {t:'audio', k:'death', p:ASSETS.death}
+    {t:'audio', k:'spawn', p:ASSETS.spawnSfx},
+    {t:'audio', k:'pickup', p:ASSETS.pickupSfx},
+    {t:'audio', k:'portal', p:ASSETS.portalSfx},
+    {t:'audio', k:'death', p:ASSETS.deathSfx}
   ];
 
-  let i=0, total = tasks.filter(x=>x.p).length || tasks.length;
+  let done = 0, total = tasks.filter(t=>t.p).length || tasks.length;
   for(const t of tasks){
-    if(!t.p){ i++; continue; }
+    if(!t.p){ done++; continue; }
     if(t.t === 'img'){
       const im = await loadImage(t.p);
       if(im){
-        if(t.k === 'ninja') IMG.ninja = im;
-        else if(t.k === 'clones') IMG.clones = im;
-        else if(t.k === 'portal') IMG.portal = im;
-        else if(t.k === 'bg') IMG.background = im;
-        else if(t.k === 'bg1') IMG.bgLayers[0] = im;
-        else if(t.k === 'bg2') IMG.bgLayers[1] = im;
-        else if(t.k === 'bg3') IMG.bgLayers[2] = im;
+        if(t.k==='ninja') IMG.ninja = im;
+        else if(t.k==='clones') IMG.clones = im;
+        else if(t.k==='portal') IMG.portal = im;
+        else if(t.k==='bg') IMG.background = im;
+        else if(t.k==='bg1') IMG.bgLayers[0] = im;
+        else if(t.k==='bg2') IMG.bgLayers[1] = im;
+        else if(t.k==='bg3') IMG.bgLayers[2] = im;
         console.log('Loaded image', t.p);
       } else console.warn('Missing image', t.p);
     } else {
       const a = await loadAudio(t.p);
       if(a){
-        if(t.k === 'bg') AUDIO.bg = a;
-        else if(t.k === 'spawn') AUDIO.spawn = a;
-        else if(t.k === 'pickup') AUDIO.pickup = a;
-        else if(t.k === 'portal') AUDIO.portal = a;
-        else if(t.k === 'death') AUDIO.death = a;
+        if(t.k==='bg') AUDIO.bg = a;
+        else if(t.k==='spawn') AUDIO.spawn = a;
+        else if(t.k==='pickup') AUDIO.pickup = a;
+        else if(t.k==='portal') AUDIO.portal = a;
+        else if(t.k==='death') AUDIO.death = a;
         console.log('Loaded audio', t.p);
       } else console.warn('Missing audio', t.p);
     }
-    i++; const pct = Math.floor((i/total)*100);
+    done++; const pct = Math.floor((done/total)*100);
     if(preloadText) preloadText.textContent = `Loading assets... ${pct}%`;
     await new Promise(r=>setTimeout(r,20));
   }
 
-  if(IMG.ninja){ SPR.ninja.w = Math.floor(IMG.ninja.naturalWidth / SPR.ninja.cols); SPR.ninja.h = Math.floor(IMG.ninja.naturalHeight / SPR.ninja.rows); }
-  if(IMG.clones){ SPR.clones.w = Math.floor(IMG.clones.naturalWidth / SPR.clones.cols); SPR.clones.h = Math.floor(IMG.clones.naturalHeight / SPR.clones.rows); }
-  if(IMG.portal){ SPR.portal.w = Math.floor(IMG.portal.naturalWidth / SPR.portal.cols); SPR.portal.h = Math.floor(IMG.portal.naturalHeight / SPR.portal.rows); }
+  // compute sprite frame sizes defensively
+  if(IMG.ninja){ SPR.ninja.w = Math.floor(IMG.ninja.naturalWidth / SPR.ninja.cols); SPR.ninja.h = Math.floor(IMG.ninja.naturalHeight / 1); }
+  if(IMG.clones){ SPR.clones.w = Math.floor(IMG.clones.naturalWidth / SPR.clones.cols); SPR.clones.h = Math.floor(IMG.clones.naturalHeight / 1); }
+  if(IMG.portal){ SPR.portal.w = Math.floor(IMG.portal.naturalWidth / SPR.portal.cols); SPR.portal.h = Math.floor(IMG.portal.naturalHeight / 1); }
 
+  // audio
   if(AUDIO.bg){ AUDIO.bg.loop = true; AUDIO.bg.volume = SETTINGS.musicVolume; }
+  if(AUDIO.spawn) AUDIO.spawn.volume = SETTINGS.sfxVolume;
+  if(AUDIO.pickup) AUDIO.pickup.volume = SETTINGS.sfxVolume;
+  if(AUDIO.portal) AUDIO.portal.volume = SETTINGS.sfxVolume;
+  if(AUDIO.death) AUDIO.death.volume = SETTINGS.sfxVolume;
+
   if(show && preloader) preloader.classList.add('hidden');
 }
 
-/* ----------------- RENDERING / GRID ----------------- */
-let ctx = canvas.getContext('2d');
-let miniCtx = miniCanvas ? miniCanvas.getContext('2d') : null;
+/* ---------------- CANVAS / GRID ---------------- */
+const ctx = canvas.getContext('2d');
+const miniCtx = miniCanvas ? miniCanvas.getContext('2d') : null;
 let pixelRatio = window.devicePixelRatio || 1;
 let cols = 19, rows = 19, tileSize = 30;
 let maze = null, mazeCache = null;
-let player = null, movesHistory = [], clones = [], powerups = [], particles = [];
-let frameCount = 0, running=false, paused=false, startTime=0, cloneInterval=300, activePower=null, PORTAL=null, currentLevel=0;
 
-function resizeCanvas(){
+/* gameplay state */
+let player = null, movesHistory = [], clones = [], powerups = [], particles = [];
+let frameCount = 0, running=false, paused=false, startTime=0, cloneInterval = 300, activePower = null, PORTAL = null, currentLevel = 0;
+
+/* resize */
+function setupCanvas(){
   pixelRatio = window.devicePixelRatio || 1;
   const maxW = Math.min(window.innerWidth - 40, 1400);
   const cssW = Math.min(maxW, window.innerWidth - 40);
@@ -175,13 +159,12 @@ function resizeCanvas(){
   const logicalH = Math.floor(logicalW * 0.62);
   canvas.width = Math.floor(logicalW * pixelRatio);
   canvas.height = Math.floor(logicalH * pixelRatio);
-  ctx = canvas.getContext('2d'); ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
+  ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
 
   if(miniCanvas){
     const mmW = Math.min(220, Math.floor(cssW * 0.28));
     const mmH = Math.floor(mmW * 0.55);
     miniCanvas.width = mmW; miniCanvas.height = mmH; miniCanvas.style.width = mmW + 'px'; miniCanvas.style.height = mmH + 'px';
-    miniCtx = miniCanvas.getContext('2d');
   }
 
   const preferred = window.innerWidth < 720 ? 24 : 36;
@@ -190,24 +173,24 @@ function resizeCanvas(){
   if(cols % 2 === 0) cols--; if(rows % 2 === 0) rows--;
   tileSize = Math.floor(Math.min(logicalW / cols, logicalH / rows));
 }
-window.addEventListener('resize', ()=>{ resizeCanvas(); cacheMaze(); });
+window.addEventListener('resize', ()=>{ setupCanvas(); cacheMaze(); });
 
-/* ------------- MAZE ------------- */
+/* ---------------- MAZE (recursive backtracker) ---------------- */
 function generateMaze(c, r){
   const grid = Array.from({length:r}, ()=> Array(c).fill(1));
   function carve(x,y){
-    grid[y][x] = 0;
+    grid[y][x]=0;
     const dirs = shuffle([[2,0],[-2,0],[0,2],[0,-2]]);
     for(const [dx,dy] of dirs){
       const nx = x+dx, ny = y+dy;
-      if(nx>0 && nx<c-1 && ny>0 && ny<r-1 && grid[ny][nx] === 1){
+      if(nx>0 && nx<c-1 && ny>0 && ny<r-1 && grid[ny][nx]===1){
         grid[y+dy/2][x+dx/2] = 0;
         carve(nx, ny);
       }
     }
   }
   carve(1,1);
-  grid[1][1] = 0; if(grid[1][2] !== undefined) grid[1][2] = 0; if(grid[2]) grid[2][1] = 0;
+  grid[1][1]=0; if(grid[1][2]!==undefined) grid[1][2]=0; if(grid[2]) grid[2][1]=0;
   return grid;
 }
 function cacheMaze(){
@@ -219,21 +202,22 @@ function cacheMaze(){
     for(let x=0;x<cols;x++){
       const v = (maze[y] && typeof maze[y][x] !== 'undefined') ? maze[y][x] : 1;
       if(v === 1){
-        mctx.fillStyle = '#2e2e2e'; mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
-        mctx.fillStyle = 'rgba(0,0,0,0.06)'; mctx.fillRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
+        mctx.fillStyle = '#17171b'; mctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+        // wall bevel
+        mctx.fillStyle = 'rgba(255,255,255,0.02)'; mctx.fillRect(x*tileSize+1,y*tileSize+1,tileSize-2,tileSize-2);
       } else {
-        mctx.fillStyle = '#0f0f0f'; mctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+        mctx.fillStyle = '#07070a'; mctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
       }
     }
   }
 }
 
-/* place portal far from start */
+/* portal placement */
 function placePortal(){
-  let best=null, bestd=-1;
+  let best=null,bestd=-1;
   for(let y=1;y<rows-1;y++){
     for(let x=1;x<cols-1;x++){
-      if(maze[y] && maze[y][x] === 0 && !(x===1 && y===1)){
+      if(maze[y] && maze[y][x]===0 && !(x===1 && y===1)){
         const d = Math.abs(x-1) + Math.abs(y-1);
         if(d > bestd){ bestd = d; best = {x,y}; }
       }
@@ -242,14 +226,14 @@ function placePortal(){
   PORTAL = best;
 }
 
-/* -------- POWERUPS & PARTICLES -------- */
+/* ---------------- POWERUPS & PARTICLES ---------------- */
 const POWER_TYPES = ['speed','cloak','shock'];
 function spawnPowerup(){
   let tries=0;
   while(tries++ < 300){
-    const x = randInt(1, cols-2); const y = randInt(1, rows-2);
+    const x = randInt(1, cols-2), y = randInt(1, rows-2);
     if(maze[y] === 0 && !(x===player.x && y===player.y) && !powerups.some(p=>p.x===x&&p.y===y)){
-      powerups.push({ x,y,type:POWER_TYPES[randInt(0,POWER_TYPES.length-1)], bob:Math.random()*Math.PI*2, spawned:Date.now()});
+      powerups.push({x,y,type:POWER_TYPES[randInt(0,POWER_TYPES.length-1)], bob:Math.random()*Math.PI*2, spawned:Date.now()});
       break;
     }
   }
@@ -258,7 +242,7 @@ function applyPowerup(type){
   if(type==='speed') activePower = {type:'speed', until: Date.now()+4500};
   else if(type==='cloak') activePower = {type:'cloak', until: Date.now()+5000};
   else if(type==='shock'){
-    clones.forEach(c=>{ c.index = Math.max(0, (c.index||0)-28); });
+    clones.forEach(c=>{ c.index = Math.max(0, (c.index||0) - 28); });
     spawnParticles((player.rx||player.x)*tileSize + tileSize/2, (player.ry||player.y)*tileSize + tileSize/2, '#bfe8ff', 18);
     if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume); else playSynth('spawn');
   }
@@ -268,7 +252,7 @@ function applyPowerup(type){
 
 function spawnParticles(px,py,color,count=18){
   for(let i=0;i<count;i++){
-    particles.push({ x:px + (Math.random()-0.5)*tileSize, y:py + (Math.random()-0.5)*tileSize, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:30+Math.random()*40, color});
+    particles.push({ x:px + (Math.random()-0.5)*tileSize, y:py + (Math.random()-0.5)*tileSize, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:30+Math.random()*40, color });
   }
 }
 function updateParticles(){
@@ -278,13 +262,15 @@ function updateParticles(){
   }
 }
 
-/* ------------- CLONE ------------- */
+/* ---------------- CLONE CLASS ---------------- */
 class Clone {
-  constructor(path,type='basic'){ this.path = path.slice(); this.index=0; this.type=type; this.spawnFrame=frameCount; this.x=this.path[0]?.x??1; this.y=this.path[0]?.y??1; }
+  constructor(path,type='basic'){ this.path = path.slice(); this.index = 0; this.type = type; this.spawnFrame = frameCount; this.x=this.path[0]?.x??1; this.y=this.path[0]?.y??1; }
   update(){
     if(this.type==='fast') this.index += 1 + (Math.random()<0.45?1:0);
     else if(this.type==='wraith'){
-      if(Math.random() < 0.01 + Math.min(0.05, frameCount/60000)){ const jump = Math.min(50, Math.floor(Math.random()*Math.min(200, this.path.length))); this.index = Math.min(this.path.length-1, this.index + jump); } else this.index++;
+      if(Math.random() < 0.01 + Math.min(0.05, frameCount/60000)){
+        const jump = Math.min(50, Math.floor(Math.random()*Math.min(200, this.path.length))); this.index = Math.min(this.path.length-1, this.index + jump);
+      } else this.index++;
     } else this.index++;
     if(this.index < this.path.length){ this.x = this.path[this.index].x; this.y = this.path[this.index].y; }
   }
@@ -302,7 +288,7 @@ class Clone {
   }
 }
 
-/* ------------- INPUT ------------- */
+/* ---------------- INPUT ---------------- */
 let activeDirs = {up:false,down:false,left:false,right:false};
 let lastStepTime = 0, stepMsBase = 140;
 
@@ -324,7 +310,6 @@ function initInput(){
     if(k==='d' || k==='D' || k==='ArrowRight') activeDirs.right = false;
   });
 }
-
 function playStep(){ if(SETTINGS.sfx && AUDIO.spawn) safePlay(AUDIO.spawn, SETTINGS.sfxVolume); else playSynth('spawn'); }
 
 function stepPlayer(){
@@ -352,7 +337,7 @@ function stepPlayer(){
   }
 }
 
-/* ------------- JOYSTICK ------------- */
+/* ---------------- JOYSTICK (mobile) ---------------- */
 let joyActive=false, joyPtr=null, joyOrigin={x:0,y:0}, joyPos={x:0,y:0}, JOY_MAX=40;
 function initJoystick(){
   if(!joystickContainer || !joystickEl) return;
@@ -371,7 +356,6 @@ function initJoystick(){
   joystickContainer.addEventListener('pointerup', (ev)=>{ if(ev.pointerId!==joyPtr) return; joyActive=false; joyPtr=null; joyPos={x:0,y:0}; joystickEl.style.transform='translate(0px,0px)'; activeDirs={up:false,down:false,left:false,right:false}; });
   joystickContainer.addEventListener('pointercancel', ()=>{ joyActive=false; joyPtr=null; joyPos={x:0,y:0}; joystickEl.style.transform='translate(0px,0px)'; activeDirs={up:false,down:false,left:false,right:false}; });
 }
-
 function updateJoystick(cx,cy){
   const dx = cx - joyOrigin.x, dy = cy - joyOrigin.y; const dist = Math.sqrt(dx*dx + dy*dy) || 1;
   const nx = dx/dist, ny = dy/dist; const r = Math.min(dist, JOY_MAX) * SETTINGS.joystickSensitivity;
@@ -383,7 +367,7 @@ function updateJoystick(cx,cy){
   stepPlayer();
 }
 
-/* ------------- SPAWN CLONE ------------- */
+/* ---------------- SPAWN CLONE ---------------- */
 function spawnClone(){
   if(movesHistory.length < 6) return;
   const len = Math.min(900, movesHistory.length);
@@ -394,11 +378,11 @@ function spawnClone(){
   spawnParticles((player.rx||player.x)*tileSize + tileSize/2, (player.ry||player.y)*tileSize + tileSize/2, '#ff4466', 20);
 }
 
-/* ------------- DRAW HELPERS ------------- */
+/* ---------------- DRAW HELPERS ---------------- */
 function drawBackground(now){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   ctx.save();
-  if(IMG.background) { const t = Date.now()/12000; const xoff = Math.sin(t) * 36; ctx.drawImage(IMG.background, -40 + xoff, -20, w+80, h+40); }
+  if(IMG.background){ const t = Date.now()/12000; const xoff = Math.sin(t) * 36; ctx.drawImage(IMG.background, -40 + xoff, -20, w+80, h+40); }
   else { const g = ctx.createLinearGradient(0,0,w,h); g.addColorStop(0,'#071018'); g.addColorStop(1,'#03040a'); ctx.fillStyle = g; ctx.fillRect(0,0,w,h); }
   for(let i=0;i<IMG.bgLayers.length;i++){ const layer = IMG.bgLayers[i]; if(!layer) continue; const depth=(i+1)/(IMG.bgLayers.length+1); const xoff = Math.sin(Date.now()/(7000*(1+depth))) * 12 * depth; ctx.globalAlpha = 0.75 - depth*0.15; ctx.drawImage(layer, -20 + xoff, -10, w+40, h+20); ctx.globalAlpha=1; }
   ctx.restore();
@@ -407,12 +391,12 @@ function drawBackground(now){
 
 function drawMaze(){
   if(!maze) return;
-  if(mazeCache){ ctx.drawImage(mazeCache,0,0); return; }
+  if(mazeCache){ ctx.drawImage(mazeCache, 0, 0); return; }
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const v = maze[y] && typeof maze[y][x] !== 'undefined' ? maze[y][x] : 1;
-      if(v === 1){ ctx.fillStyle='#2e2e2e'; ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize); ctx.fillStyle='rgba(0,0,0,0.06)'; ctx.fillRect(x*tileSize+1,y*tileSize+1,tileSize-2,tileSize-2); }
-      else { ctx.fillStyle='#0f0f0f'; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize); }
+      if(v === 1){ ctx.fillStyle = '#2a2a36'; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize); ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(x*tileSize+1,y*tileSize+1,tileSize-2,tileSize-2); }
+      else { ctx.fillStyle = '#07070a'; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize); }
     }
   }
 }
@@ -458,32 +442,44 @@ function drawPlayer(){
   }
 }
 
-/* ------------- HUD ------------- */
-function showToast(text,duration=1400){ const el=document.createElement('div'); el.className='notif'; el.textContent=text; notifArea.appendChild(el); setTimeout(()=>{ el.style.transition='opacity .45s, transform .45s'; el.style.opacity='0'; el.style.transform='translateY(-18px)'; setTimeout(()=>el.remove(),480); }, duration); }
-function updateHUD(){ if(timerText) timerText.textContent = `Time: ${nowSec()}s`; if(powerupBox){ if(activePower && Date.now() < activePower.until){ const rem=Math.ceil((activePower.until - Date.now())/1000); powerupBox.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`; } else { powerupBox.innerHTML=''; if(activePower && Date.now()>=activePower.until) activePower=null; } } }
+/* ---------------- HUD & TOAST ---------------- */
+function showToast(text, duration=1400){ const el=document.createElement('div'); el.className='notif'; el.textContent=text; notifArea.appendChild(el); setTimeout(()=>{ el.style.transition='opacity .45s, transform .45s'; el.style.opacity='0'; el.style.transform='translateY(-18px)'; setTimeout(()=>el.remove(),480); }, duration); }
+function updateHUD(){ if(timerText) timerText.textContent = `Time: ${nowSec()}s`; if(powerupBox){ if(activePower && Date.now() < activePower.until){ const rem=Math.ceil((activePower.until - Date.now())/1000); powerupBox.innerHTML = `<b>${activePower.type.toUpperCase()}</b> ${rem}s`; } else { powerupBox.innerHTML=''; if(activePower && Date.now() >= activePower.until) activePower = null; } } }
 
-/* ------------- MAIN LOOP ------------- */
+/* ---------------- MAIN LOOP ---------------- */
 let lastFrame = performance.now();
 function animate(now){
   if(!running || paused) return;
   const dt = (now - lastFrame)/1000; lastFrame = now; frameCount++;
 
+  // spawn powerups occasionally
   if(frameCount % 900 === 0 && Math.random() < 0.88) spawnPowerup();
-  const intervalFrames = Math.max(8, Math.floor(cloneInterval / (1 + difficultyNumeric()*0.6)));
-  if(frameCount % intervalFrames === 0 && movesHistory.length > 8){ spawnClone(); if(cloneInterval > 30) cloneInterval -= 1 + (difficultyNumeric()-1); if(Math.random() < 0.02 + (difficultyNumeric()-1)*0.03) spawnClone(); }
 
-  for(let i=clones.length-1;i>=0;i--){ const c = clones[i]; c.update(); if(Math.round(c.x) === player.x && Math.round(c.y) === player.y){ if(!(activePower && activePower.type === 'cloak' && Date.now() < activePower.until)){ running=false; if(SETTINGS.sfx && AUDIO.death) safePlay(AUDIO.death, SETTINGS.sfxVolume); else playSynth('death'); showToast(`☠️ You survived ${nowSec()}s`); spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ffcc66', 40); setTimeout(()=>{ onGameOver(); }, 800); return; } } }
+  // clone spawn pacing
+  const intervalFrames = Math.max(8, Math.floor(cloneInterval / (1 + difficultyNumeric()*0.6)));
+  if(frameCount % intervalFrames === 0 && movesHistory.length > 8){
+    spawnClone();
+    if(cloneInterval > 30) cloneInterval -= 1 + (difficultyNumeric()-1);
+    if(Math.random() < 0.02 + (difficultyNumeric()-1)*0.03) spawnClone();
+  }
+
+  // update clones & collision
+  for(let i=clones.length-1;i>=0;i--){ const c = clones[i]; c.update(); if(Math.round(c.x) === player.x && Math.round(c.y) === player.y){ if(!(activePower && activePower.type === 'cloak' && Date.now() < activePower.until)){ running=false; if(SETTINGS.sfx && AUDIO.death) safePlay(AUDIO.death, SETTINGS.sfxVolume); else playSynth('death'); showToast('☠️ You Died'); spawnParticles(player.rx*tileSize + tileSize/2, player.ry*tileSize + tileSize/2, '#ffcc66', 40); setTimeout(()=>{ onGameOver(); }, 800); return; } } }
 
   updateParticles();
 
   ctx.clearRect(0,0,canvas.width/pixelRatio, canvas.height/pixelRatio);
-  drawBackground(now); drawMaze(); drawPowerups(now); drawPortal(now);
+  drawBackground(now);
+  drawMaze();
+  drawPowerups(now);
+  drawPortal(now);
   for(const c of clones) c.draw();
 
   const speed = 12 + (difficultyNumeric()-1)*6; const t = Math.min(1, dt * speed);
   player.rx = player.rx === undefined ? player.x : (player.rx + (player.x - player.rx) * t);
   player.ry = player.ry === undefined ? player.y : (player.ry + (player.y - player.ry) * t);
 
+  // trail
   for(let i=Math.max(0, movesHistory.length-30); i<movesHistory.length; i++){
     const m = movesHistory[i]; const alpha = (i - Math.max(0, movesHistory.length-30)) / 30;
     ctx.globalAlpha = 0.05 + alpha * 0.25; ctx.fillStyle = '#33ff77'; ctx.fillRect(m.x*tileSize + tileSize*0.28, m.y*tileSize + tileSize*0.28, tileSize*0.44, tileSize*0.44);
@@ -494,14 +490,13 @@ function animate(now){
   for(const p of particles){ ctx.globalAlpha = Math.max(0, p.life/70); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3); }
   ctx.globalAlpha = 1;
 
-  drawMinimap(); updateHUD();
+  drawMinimap();
+  updateHUD();
+
   requestAnimationFrame(animate);
 }
 
-/* ------------- DIFFICULTY ------------- */
-function difficultyNumeric(){ switch(SETTINGS.difficulty){ case 'easy': return 0.8; case 'normal': return 1; case 'hard': return 1.5; case 'nightmare': return 2.2; default: return 1; } }
-
-/* ------------- LEVELS & LIFECYCLE ------------- */
+/* ---------------- LEVELS & LIFECYCLE ---------------- */
 const LEVELS = [
   {name:'Novice Shadow', scale:1.0},
   {name:'Wandering Echo', scale:1.12},
@@ -513,19 +508,19 @@ const LEVELS = [
 
 function startLevel(index=0){
   currentLevel = clamp(index,0,LEVELS.length-1);
-  resizeCanvas();
+  setupCanvas();
   const L = LEVELS[currentLevel];
   cols = Math.max(11, Math.floor(19 * L.scale)); rows = Math.max(11, Math.floor(19 * L.scale));
   if(cols % 2 === 0) cols--; if(rows % 2 === 0) rows--;
   maze = generateMaze(cols, rows);
   cacheMaze();
-  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6,tileSize*0.36), color:'#66ff99' };
+  player = { x:1, y:1, rx:1, ry:1, radius: Math.max(6, tileSize*0.36), color:'#66ff99' };
   movesHistory = []; clones = []; powerups = []; particles = [];
   frameCount = 0; cloneInterval = Math.max(40, 300 - Math.floor(difficultyNumeric()*80));
   running = true; paused=false; startTime = Date.now(); activePower = null;
   placePortal();
   if(preloader) preloader.classList.add('hidden');
-  if(hudStatus) hudStatus.textContent = `Level: ${LEVELS[currentLevel].name}`;
+  if(statusText) statusText.textContent = `Level: ${LEVELS[currentLevel].name}`;
   lastFrame = performance.now(); requestAnimationFrame(animate); tickLoop();
 }
 
@@ -548,12 +543,12 @@ function transitionToNextLevel(){
 
 function onGameOver(){
   running=false;
-  const elapsed = nowSec(); const prevBest = Number(localStorage.getItem(STORAGE.BEST)) || 0;
-  if(elapsed > prevBest){ localStorage.setItem(STORAGE.BEST, elapsed); showToast('NEW RECORD!'); addToLeaderboard(elapsed); }
+  const elapsed = nowSec(); const prevBest = Number(localStorage.getItem(STORAGE_KEYS.BEST)) || 0;
+  if(elapsed > prevBest){ localStorage.setItem(STORAGE_KEYS.BEST, elapsed); showToast('NEW RECORD!'); addToLeaderboard(elapsed); }
   if(gameOverEl) gameOverEl.classList.remove('hidden'); if(gameOverText) gameOverText.textContent = `You survived ${elapsed}s`;
 }
 
-/* ------------- TICK LOOP ------------- */
+/* ---------------- TICK LOOP ---------------- */
 let lastTick = 0;
 function tickLoop(){
   if(!running || paused) return;
@@ -562,29 +557,28 @@ function tickLoop(){
   requestAnimationFrame(tickLoop);
 }
 
-/* ------------- AUDIO SAFE PLAY ------------- */
+/* ---------------- AUDIO SAFE PLAY ---------------- */
 function safePlay(a, vol=1){ if(!a) return; try{ a.volume = vol; a.currentTime = 0; a.play().catch(()=>{}); }catch(e){} }
 
-/* ------------- LEADERBOARD ------------- */
+/* ---------------- LEADERBOARD ---------------- */
 function addToLeaderboard(time){
-  let list = JSON.parse(localStorage.getItem(STORAGE.LEADER) || '[]');
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADER) || '[]');
   let name = prompt('New high score! Enter your name (max 12 chars):','Player') || 'Player';
   name = name.slice(0,12);
-  list.push({name, time}); list.sort((a,b)=> b.time - a.time); localStorage.setItem(STORAGE.LEADER, JSON.stringify(list.slice(0,50)));
+  list.push({name,time}); list.sort((a,b)=> b.time - a.time); localStorage.setItem(STORAGE_KEYS.LEADER, JSON.stringify(list.slice(0,50)));
   updateLeaderboardUI();
 }
 function updateLeaderboardUI(){
-  const list = JSON.parse(localStorage.getItem(STORAGE.LEADER) || '[]'); if(!leaderboardList) return;
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADER) || '[]'); if(!leaderboardList) return;
   leaderboardList.innerHTML = ''; list.slice(0,10).forEach(it=>{ const li=document.createElement('li'); li.textContent = `${it.name} — ${it.time}s`; leaderboardList.appendChild(li); });
 }
 
-/* ------------- UI WIRING ------------- */
+/* ---------------- UI WIRING ---------------- */
 function wireUI(){
   btnStart && btnStart.addEventListener('click', async ()=>{
     await preloadAll(true);
     if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume);
-    mainMenu.style.display = 'none'; UI.classList.remove('hidden'); initInput(); initJoystick(); updateLeaderboardUI();
-    startLevel(0);
+    mainMenu.style.display = 'none'; UI.classList.remove('hidden'); initInput(); initJoystick(); updateLeaderboardUI(); startLevel(0);
   });
 
   btnTutorial && btnTutorial.addEventListener('click', ()=>{ tutorialEl.classList.remove('hidden'); });
@@ -601,41 +595,40 @@ function wireUI(){
   closeCredits && closeCredits.addEventListener('click', ()=>{ creditsEl.classList.add('hidden'); });
 
   btnLeaderboard && btnLeaderboard.addEventListener('click', ()=>{ leaderboardEl.classList.remove('hidden'); updateLeaderboardUI(); });
-  clearLeaderboardBtn && clearLeaderboardBtn.addEventListener('click', ()=>{ if(confirm('Clear local leaderboard?')){ localStorage.removeItem(STORAGE.LEADER); updateLeaderboardUI(); }});
+  clearLeaderboardBtn && clearLeaderboardBtn.addEventListener('click', ()=>{ if(confirm('Clear local leaderboard?')){ localStorage.removeItem(STORAGE_KEYS.LEADER); updateLeaderboardUI(); }});
   closeLeaderboard && closeLeaderboard.addEventListener('click', ()=>{ leaderboardEl.classList.add('hidden'); });
 
-  pauseBtn && pauseBtn.addEventListener('click', ()=>{ paused = true; running = false; menuOverlay.classList.remove('hidden'); if(AUDIO.bg) AUDIO.bg.pause(); });
+  pauseBtn && pauseBtn.addEventListener('click', ()=>{ paused=true; running=false; menuOverlay.classList.remove('hidden'); if(AUDIO.bg) AUDIO.bg.pause(); })
   resumeBtn && resumeBtn.addEventListener('click', ()=>{ menuOverlay.classList.add('hidden'); paused=false; running=true; lastFrame = performance.now(); requestAnimationFrame(animate); tickLoop(); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume); });
   restartBtn && restartBtn.addEventListener('click', ()=>{ startLevel(0); menuOverlay.classList.add('hidden'); if(SETTINGS.music && AUDIO.bg) safePlay(AUDIO.bg, SETTINGS.musicVolume); });
-  backMenuBtn && backMenuBtn.addEventListener('click', ()=>{ running=false; menuOverlay.classList.add('hidden'); UI.classList.add('hidden'); document.querySelector('#mainMenu').style.display='flex'; if(AUDIO.bg) AUDIO.bg.pause(); });
+  backMenuBtn && backMenuBtn.addEventListener('click', ()=>{ running=false; UI.classList.add('hidden'); menuOverlay.classList.add('hidden'); mainMenu.style.display='flex'; if(AUDIO.bg) AUDIO.bg.pause(); });
 
   retryBtn && retryBtn.addEventListener('click', ()=>{ gameOverEl.classList.add('hidden'); startLevel(0); });
-  quitBtn && quitBtn.addEventListener('click', ()=>{ gameOverEl.classList.add('hidden'); UI.classList.add('hidden'); document.querySelector('#mainMenu').style.display='flex'; if(AUDIO.bg) AUDIO.bg.pause(); });
-
-  window.SCE = { startLevel, spawnPowerup, spawnClone, SETTINGS, IMG, AUDIO };
+  quitBtn && quitBtn.addEventListener('click', ()=>{ gameOverEl.classList.add('hidden'); UI.classList.add('hidden'); mainMenu.style.display='flex'; if(AUDIO.bg) AUDIO.bg.pause(); });
 }
 
-/* ------------- UTILITIES ------------- */
-const clamp = (v,a,b)=> Math.max(a,Math.min(b,v));
-const randInt = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
-const shuffle = (a)=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; };
-const nowSec = ()=> Math.floor((Date.now() - startTime)/1000);
-function saveSettings(){ try{ localStorage.setItem(STORAGE.SETTINGS, JSON.stringify(SETTINGS)); }catch(e){} }
+/* ---------------- HELPERS ---------------- */
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const shuffle = (a) => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; };
+const nowSec = () => Math.floor((Date.now() - startTime)/1000);
+function saveSettings(){ try{ localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(SETTINGS)); }catch(e){} }
+function difficultyNumeric(){ switch(SETTINGS.difficulty){ case 'easy': return 0.8; case 'normal': return 1; case 'hard': return 1.5; case 'nightmare': return 2.2; default: return 1; } }
 
-/* ------------- BOOT ------------- */
+/* ---------------- BOOT ---------------- */
 async function boot(){
-  resizeCanvas();
-  // set inputs values from settings
+  setupCanvas();
+  wireUI();
+  // populate settings UI
   const m = $('musicToggle'), s = $('sfxToggle'), mv = $('musicVolume'), sv = $('sfxVolume'), d = $('difficulty');
   if(m) m.checked = SETTINGS.music; if(s) s.checked = SETTINGS.sfx; if(mv) mv.value = SETTINGS.musicVolume; if(sv) sv.value = SETTINGS.sfxVolume; if(d) d.value = SETTINGS.difficulty;
-  wireUI();
-  try{ await preloadAll(false); console.log('prefetch complete'); }catch(e){ console.warn('prefetch failed', e); }
+  try{ await preloadAll(false); console.log('prefetch complete'); } catch(e){ console.warn('prefetch failed', e); }
   initJoystick();
-  ctx.clearRect(0,0,canvas.width/pixelRatio, canvas.height/pixelRatio); ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width/pixelRatio, canvas.height/pixelRatio);
-  ctx.fillStyle='#fff'; ctx.font = '22px Inter, sans-serif'; ctx.fillText('Shadow Clone Escape — Press START', 20, 40);
-  console.log('Boot complete');
+  ctx.clearRect(0,0,canvas.width/pixelRatio, canvas.height/pixelRatio);
+  ctx.fillStyle='#fff'; ctx.font='20px Inter, sans-serif'; ctx.fillText('Shadow Clone Escape — Press START', 20, 40);
+  console.log('Boot complete. Assets: ', {IMG, AUDIO, SPR});
 }
 boot();
 
-/* ------------- last helpers ------------- */
-window.addEventListener('error', (e)=> console.error('Global error', e));
+// expose for debugging
+window.SCE = { startLevel, spawnPowerup, spawnClone, SETTINGS, IMG, AUDIO };
