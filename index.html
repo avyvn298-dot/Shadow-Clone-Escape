@@ -1,55 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Shadow Clone Escape</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shadow Clone Escape — AAA Prototype</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1 class="title">⚔️ Shadow Clone Escape ⚔️</h1>
-
-  <div class="game-container">
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <canvas id="minimap" width="100" height="100"></canvas>
-  </div>
-
-  <div class="hud">
-    <span id="scoreDisplay">Score: 0</span>
-    <span id="highScoreDisplay"></span>
-  </div>
-
-  <div id="leaderboard" class="leaderboard"></div>
-
-  <div class="menu">
-    <button id="startBtn">▶️ Start</button>
-    <button id="settingsBtn">⚙️ Settings</button>
-  </div>
-
-  <!-- Pause Menu -->
-  <div id="pauseMenu" class="overlay hidden">
-    <div class="menu-box">
-      <h2>⏸ Paused</h2>
-      <button id="resumeBtn">Resume</button>
-      <button id="quitBtn">Quit</button>
+  <!-- LOADING / BOOT -->
+  <div id="loading" class="overlay loading">
+    <div class="loading-card">
+      <div id="loading-sprite" class="loading-sprite"></div>
+      <h2>Shadow Clone Escape</h2>
+      <p id="loading-status">Loading assets…</p>
+      <div class="loader-bar"><div id="loader-progress" style="width:0%"></div></div>
+      <small class="muted">Built for browser — tap Start when ready</small>
     </div>
   </div>
 
-  <!-- Game Over -->
-  <div id="gameOverScreen" class="overlay hidden">
-    <div class="menu-box">
-      <h2>💀 Game Over</h2>
-      <button id="restartBtn">Restart</button>
+  <!-- MAIN MENU -->
+  <header id="mainMenu" class="menu-card">
+    <div class="logo-glow">
+      <h1 class="logo">Shadow Clone Escape</h1>
+    </div>
+    <nav class="menu-buttons">
+      <button id="btnStart" class="glow">Start Game</button>
+      <button id="btnHow" class="glow">How to Play</button>
+      <button id="btnLeaderboard" class="glow">Leaderboard</button>
+      <button id="btnSettings" class="glow">Settings</button>
+    </nav>
+    <footer class="menu-footer">
+      <small class="muted">Responsive — works on desktop & mobile</small>
+    </footer>
+  </header>
+
+  <!-- GAME LAYOUT -->
+  <div id="gameWrap" class="hidden">
+    <div class="game-left">
+      <canvas id="gameCanvas" tabindex="0"></canvas>
+      <div id="hud" class="hud">
+        <div class="hud-left">
+          <div id="hud-level" class="hud-pill">Level 1</div>
+          <div id="hud-lives" class="hud-pill">Lives: 3</div>
+        </div>
+        <div class="hud-center">
+          <div id="hud-time">Time: 0s</div>
+        </div>
+        <div class="hud-right">
+          <div id="hud-score" class="hud-pill">Score: 0</div>
+        </div>
+      </div>
+      <div id="mobileJoystick" class="joystick hidden" aria-hidden="true">
+        <div class="joystick-base"><div class="joystick-knob"></div></div>
+      </div>
+    </div>
+
+    <aside class="side-panel">
+      <div class="panel-card">
+        <h3>Mini-map</h3>
+        <canvas id="miniMap" width="280" height="180"></canvas>
+      </div>
+
+      <div class="panel-card">
+        <h3>Powerup</h3>
+        <div id="powerupBox" class="powerupBox">—</div>
+      </div>
+
+      <div class="panel-card">
+        <h3>Controls</h3>
+        <div class="controls">
+          <div>Keyboard: WASD / Arrow keys</div>
+          <div>Mobile: Use on-screen joystick</div>
+        </div>
+      </div>
+
+      <div class="panel-card actions">
+        <button id="btnPause">Pause</button>
+        <button id="btnRestart">Restart</button>
+        <button id="btnMenu">Main Menu</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- HOW TO PLAY -->
+  <div id="overlayHow" class="overlay hidden">
+    <div class="card">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Navigate the ninja through the maze.</li>
+        <li>Avoid clones — they replay your past movements.</li>
+        <li>Collect powerups: Speed, Cloak, Spawn-Clone.</li>
+        <li>Reach the portal to advance levels.</li>
+        <li>Survive as long as you can — get high scores!</li>
+      </ul>
+      <button class="close-btn" data-close="overlayHow">Close</button>
     </div>
   </div>
 
-  <!-- Settings -->
-  <div id="settingsMenu" class="overlay hidden">
-    <div class="menu-box">
-      <h2>⚙️ Settings</h2>
-      <button id="toggleThemeBtn">Toggle Theme</button>
-      <button id="closeSettingsBtn">Close</button>
+  <!-- SETTINGS -->
+  <div id="overlaySettings" class="overlay hidden">
+    <div class="card settings-card">
+      <h2>Settings</h2>
+      <label>Music <input id="toggleMusic" type="checkbox" checked></label>
+      <label>SFX <input id="toggleSfx" type="checkbox" checked></label>
+      <label>Music Volume
+        <input id="musicVol" type="range" min="0" max="1" step="0.01" value="0.45">
+      </label>
+      <label>SFX Volume
+        <input id="sfxVol" type="range" min="0" max="1" step="0.01" value="1.0">
+      </label>
+      <label>Difficulty
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="nightmare">Nightmare</option>
+        </select>
+      </label>
+      <div class="settings-actions">
+        <button id="btnSaveSettings">Save</button>
+        <button class="close-btn" data-close="overlaySettings">Close</button>
+      </div>
     </div>
   </div>
+
+  <!-- LEADERBOARD -->
+  <div id="overlayLeaderboard" class="overlay hidden">
+    <div class="card">
+      <h2>Leaderboard</h2>
+      <ol id="leaderboardList"></ol>
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;">
+        <button id="btnClearLeaderboard">Clear</button>
+        <button class="close-btn" data-close="overlayLeaderboard">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="overlayPause" class="overlay hidden">
+    <div class="card">
+      <h2>Paused</h2>
+      <button id="btnResume">Resume</button>
+      <button id="btnQuitToMenu">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="overlayGameOver" class="overlay hidden">
+    <div class="card">
+      <h2>Game Over</h2>
+      <p id="gameOverText">You survived 0s</p>
+      <div style="display:flex;gap:12px;">
+        <button id="btnGameOverRestart">Restart</button>
+        <button class="close-btn" data-close="overlayGameOver">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="bgMusic" loop preload="auto"></audio>
+  <audio id="sfxSpawn" preload="auto"></audio>
+  <audio id="sfxPickup" preload="auto"></audio>
+  <audio id="sfxPortal" preload="auto"></audio>
+  <audio id="sfxDeath" preload="auto"></audio>
+  <audio id="sfxNewRecord" preload="auto"></audio>
 
   <script src="script.js"></script>
 </body>
