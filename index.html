@@ -1,109 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ninja Clone Escape</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Shadow Clone Escape</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- =========================
-       LOADING SCREEN
-  ========================== -->
-  <div id="loading-screen">
-    <canvas id="loading-canvas"></canvas>
-    <p class="loading-text">Loading Ninja Clone Escape...</p>
+  <h1 class="title">⚔️ Shadow Clone Escape ⚔️</h1>
+
+  <div class="game-container">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <canvas id="minimap" width="100" height="100"></canvas>
   </div>
 
-  <!-- =========================
-       MAIN MENU
-  ========================== -->
-  <div id="main-menu" class="hidden">
-    <div class="menu-logo">⚔️ Ninja Clone Escape ⚔️</div>
-    <div class="menu-buttons">
-      <button id="btn-start">Start Game</button>
-      <button id="btn-settings">Settings</button>
-      <button id="btn-leaderboard">Leaderboard</button>
-      <button id="btn-howto">How to Play</button>
+  <div class="hud">
+    <span id="scoreDisplay">Score: 0</span>
+    <span id="highScoreDisplay"></span>
+  </div>
+
+  <div id="leaderboard" class="leaderboard"></div>
+
+  <div class="menu">
+    <button id="startBtn">▶️ Start</button>
+    <button id="settingsBtn">⚙️ Settings</button>
+  </div>
+
+  <!-- Pause Menu -->
+  <div id="pauseMenu" class="overlay hidden">
+    <div class="menu-box">
+      <h2>⏸ Paused</h2>
+      <button id="resumeBtn">Resume</button>
+      <button id="quitBtn">Quit</button>
     </div>
   </div>
 
-  <!-- =========================
-       SETTINGS OVERLAY
-  ========================== -->
-  <div id="settings-overlay" class="overlay hidden">
-    <div class="overlay-content">
-      <h2>Game Settings ⚙️</h2>
-      <label>Music Volume: <input type="range" min="0" max="1" step="0.01" id="music-volume"></label>
-      <label>SFX Volume: <input type="range" min="0" max="1" step="0.01" id="sfx-volume"></label>
-      <button class="btn-close" data-close="settings-overlay">Close</button>
+  <!-- Game Over -->
+  <div id="gameOverScreen" class="overlay hidden">
+    <div class="menu-box">
+      <h2>💀 Game Over</h2>
+      <button id="restartBtn">Restart</button>
     </div>
   </div>
 
-  <!-- =========================
-       LEADERBOARD OVERLAY
-  ========================== -->
-  <div id="leaderboard-overlay" class="overlay hidden">
-    <div class="overlay-content">
-      <h2>Leaderboard 🏆</h2>
-      <ul id="leaderboard-list"></ul>
-      <button class="btn-close" data-close="leaderboard-overlay">Close</button>
-    </div>
-  </div>
-
-  <!-- =========================
-       HOW TO PLAY
-  ========================== -->
-  <div id="howto-overlay" class="overlay hidden">
-    <div class="overlay-content">
-      <h2>How to Play 🎮</h2>
-      <p>Use WASD / Arrow Keys to move.</p>
-      <p>Collect powerups to survive.</p>
-      <p>Reach the portal to escape.</p>
-      <button class="btn-close" data-close="howto-overlay">Close</button>
-    </div>
-  </div>
-
-  <!-- =========================
-       GAME CANVAS
-  ========================== -->
-  <div id="game-container" class="hidden">
-    <canvas id="game-canvas" width="1280" height="720"></canvas>
-    <div id="hud">
-      <span id="score-display">Score: 0</span>
-      <span id="lives-display">Lives: 3</span>
-      <span id="level-display">Level: 1</span>
+  <!-- Settings -->
+  <div id="settingsMenu" class="overlay hidden">
+    <div class="menu-box">
+      <h2>⚙️ Settings</h2>
+      <button id="toggleThemeBtn">Toggle Theme</button>
+      <button id="closeSettingsBtn">Close</button>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <script>
-    // Ninja loading animation
-    const loadingCanvas = document.getElementById('loading-canvas');
-    const lctx = loadingCanvas.getContext('2d');
-    loadingCanvas.width = 200;
-    loadingCanvas.height = 200;
-    const ninjaSprite = new Image();
-    ninjaSprite.src = "assets/ninja_spritesheet.png";
-    let frame = 0, tick = 0;
-
-    function drawLoading() {
-      lctx.clearRect(0, 0, loadingCanvas.width, loadingCanvas.height);
-      lctx.drawImage(ninjaSprite, frame*128, 0, 128, 128, 36, 36, 128, 128);
-      tick++;
-      if (tick > 8) {
-        tick = 0;
-        frame = (frame+1) % 4;
-      }
-      requestAnimationFrame(drawLoading);
-    }
-    ninjaSprite.onload = () => drawLoading();
-
-    // Fake loading timer
-    setTimeout(() => {
-      document.getElementById('loading-screen').classList.add('hidden');
-      document.getElementById('main-menu').classList.remove('hidden');
-    }, 4000);
-  </script>
 </body>
 </html>
