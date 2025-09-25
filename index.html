@@ -1,61 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shadow Clone Escape</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shadow Clone Escape — AAA Demo</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Start Screen -->
-  <div id="start-screen">
-    <div class="overlay">
-      <h1 class="game-title">⚔️ Shadow Clone Escape ⚔️</h1>
-      <button id="btn-start">Start Run</button>
-      <button id="btn-settings">Settings</button>
-      <button id="btn-leaderboard">Leaderboard</button>
-      <button id="btn-tutorial">Tutorial</button>
+  <!-- Background image fills viewport -->
+  <div id="bg">
+    <img src="background.png" id="bg-img" alt="background" />
+    <div id="bg-overlay"></div>
+  </div>
+
+  <!-- Top header / small controls -->
+  <header id="ui-header">
+    <div id="brand">⚔️ Shadow Clone Escape</div>
+    <div id="header-controls">
+      <button id="menuBtn" class="hdr-btn">☰ Menu</button>
+      <div id="bestRecordText">Best: —</div>
+    </div>
+  </header>
+
+  <!-- Main menu overlay -->
+  <main id="menu" class="panel">
+    <div class="panel-card">
+      <h1 id="title">SHADOW CLONE ESCAPE</h1>
+      <p id="subtitle">Survive as long as you can — clones repeat your path</p>
+      <div class="controls">
+        <button id="startBtn" class="primary">Start Run</button>
+        <button id="tutorialBtn" class="secondary">Tutorial</button>
+        <button id="settingsBtn" class="secondary">Settings</button>
+        <button id="leaderBtn" class="secondary">Leaderboard</button>
+      </div>
+      <div id="menu-foot">Built with ❤️ — AAA polish demo</div>
+    </div>
+  </main>
+
+  <!-- In-game UI -->
+  <div id="ui" class="panel-hidden">
+    <div id="hud">
+      <div id="left-hud">
+        <div id="powerupBox"></div>
+        <div id="status">Ready</div>
+      </div>
+      <div id="center-hud">
+        <div id="timer">Time: 0s</div>
+      </div>
+      <div id="right-hud">
+        <button id="menuBtnHeader" class="hdr-btn">≡</button>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    <!-- mini map appended by script (offscreen canvas exposed) -->
+    <div id="mobileControls" class="hidden">
+      <div id="joystickContainer"><div id="joystick"></div></div>
+      <button id="btnPower" class="power-btn">⚡</button>
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settings-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Settings ⚙️</h2>
-      <label>
-        <input type="checkbox" id="music-toggle" checked>
-        Background Music
+  <!-- Menus & overlays -->
+  <section id="tutorial" class="modal hidden">
+    <div class="card">
+      <h2>Tutorial</h2>
+      <ul>
+        <li>WASD / Arrow keys — move</li>
+        <li>Space — Shock power (or tap the ⚡ button)</li>
+        <li>Collect powerups and reach the portal to level up</li>
+      </ul>
+      <button class="closeBtn">Close</button>
+    </div>
+  </section>
+
+  <section id="settings" class="modal hidden">
+    <div class="card">
+      <h2>Settings</h2>
+      <label>Music <input id="musicToggle" type="checkbox" checked /></label>
+      <label>SFX <input id="sfxToggle" type="checkbox" checked /></label>
+      <label>Difficulty
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="nightmare">Nightmare</option>
+        </select>
       </label>
-      <label>
-        <input type="checkbox" id="sfx-toggle" checked>
-        Sound Effects
-      </label>
-      <button class="btn-close">Close</button>
+      <button class="closeBtn">Close</button>
     </div>
+  </section>
+
+  <section id="leaderboard" class="modal hidden">
+    <div class="card">
+      <h2>Leaderboard</h2>
+      <ol id="leaderboardList"></ol>
+      <button id="clearLeaderboard">Clear</button>
+      <button class="closeBtn">Close</button>
+    </div>
+  </section>
+
+  <section id="menuOverlay" class="modal hidden">
+    <div class="card">
+      <h2>Menu</h2>
+      <button id="restartBtn">Restart</button>
+      <button id="menuReturnBtn">Return to Main Menu</button>
+      <button class="closeBtn">Close</button>
+    </div>
+  </section>
+
+  <!-- Preloader (hidden normally) -->
+  <div id="preloader" class="hidden">
+    <div class="loader">Loading… <span id="loaderPct">0%</span></div>
   </div>
 
-  <!-- Leaderboard Modal -->
-  <div id="leaderboard-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Leaderboard 🏆</h2>
-      <ul id="leaderboard-list"></ul>
-      <button class="btn-close">Close</button>
-    </div>
-  </div>
-
-  <!-- Tutorial Modal -->
-  <div id="tutorial-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Tutorial 📜</h2>
-      <p>🕹️ Move Ninja: WASD or Arrow Keys</p>
-      <p>🎯 Goal: Find the portal while avoiding traps!</p>
-      <p>⚡ Powerups: Collect glowing orbs for boosts.</p>
-      <button class="btn-close">Got it!</button>
-    </div>
-  </div>
-
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas"></canvas>
+  <!-- Audio elements (you can replace src with your files or leave — script will fallback) -->
+  <audio id="bgMusic" preload="auto" loop></audio>
+  <audio id="spawnSfx" preload="auto"></audio>
+  <audio id="pickupSfx" preload="auto"></audio>
+  <audio id="portalSfx" preload="auto"></audio>
+  <audio id="deathSfx" preload="auto"></audio>
+  <audio id="newRecordSfx" preload="auto"></audio>
 
   <script src="script.js"></script>
 </body>
