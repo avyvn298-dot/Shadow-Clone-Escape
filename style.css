@@ -1,337 +1,101 @@
-/* ===============================
-   GLOBAL STYLES
-   =============================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+/* ============================
+   Shadow Clone Escape — style.css
+   AAA-polished UI, responsive
+   ============================ */
+
+/* base */
+:root{
+  --bg:#05060a;
+  --panel:#0e0f14;
+  --accent:#ff4b4b;
+  --accent-2:#66ff99;
+  --muted:#9aa0a6;
+  --glass: rgba(255,255,255,0.04);
 }
 
-body {
-  background: #000;
-  color: #fff;
-  overflow: hidden;
-  user-select: none;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+*{ box-sizing:border-box; margin:0; padding:0; font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+html,body{ height:100%; background:linear-gradient(180deg,#02040a 0%, #071018 60%); color:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+a{ color:inherit; }
+
+/* center screen helper */
+.screen{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:40; }
+.centered{ flex-direction:column; gap:1rem; }
+
+/* PRELOADER */
+.overlay-preloader{
+  background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.9));
+  z-index:80;
 }
-
-/* ===============================
-   SCREENS (loading, menus, etc.)
-   =============================== */
-.screen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle at center, #111 0%, #000 100%);
-  z-index: 10;
-  transition: opacity 0.4s ease;
+.pre-inner{
+  width:min(720px,92%);
+  border-radius:14px;
+  padding:28px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+  text-align:center;
 }
+.logo{ font-weight:800; font-size:28px; color:var(--accent); text-shadow:0 0 14px rgba(255,75,75,0.18);}
+.loader-bar{ background:var(--glass); height:12px; border-radius:8px; margin:18px 0; overflow:hidden; }
+.loader-fill{ width:0%; height:100%; background:linear-gradient(90deg,var(--accent), #ffbb6b); animation: preloadFill 2.4s infinite; }
+@keyframes preloadFill{ 0%{width:0}50%{width:86%}100%{width:0} }
 
-.hidden {
-  display: none;
-}
+/* MENU / layout */
+.menu{ padding:28px; gap:18px; }
+.menu-header .title{ font-size:44px; letter-spacing:1px; color:var(--accent); text-shadow:0 6px 30px rgba(255,75,75,0.12); }
+.menu-header .subtitle{ color:var(--muted); margin-top:6px; }
 
-.active {
-  display: flex;
-}
+.menu-buttons{ display:flex; flex-direction:column; gap:12px; width:min(540px,92%); align-items:center; }
+.btn{ padding:10px 20px; border-radius:10px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.45); transition:all .12s ease; }
+.btn.small{ padding:7px 12px; font-size:.9rem; }
+.btn.large{ padding:16px 36px; font-size:1.12rem; border-radius:14px; }
+.btn.primary{ background:linear-gradient(90deg,var(--accent), #ff7733); border:none; box-shadow:0 10px 30px rgba(255,75,75,0.12); }
+.btn:active{ transform:translateY(1px) scale(.998); }
 
-/* ===============================
-   LOADING SCREEN
-   =============================== */
-.loading-logo {
-  font-size: 3em;
-  font-weight: bold;
-  margin-bottom: 2rem;
-  color: #ff4444;
-  text-shadow: 0 0 15px #ff0000;
-  animation: glow 2s infinite alternate;
-}
+/* modal */
+.modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.8)); }
+.modal-card{ width:min(760px,96%); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); padding:18px; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,0.6); }
+.modal h2{ margin-bottom:8px; color:var(--accent); }
+.modal p, .modal li{ color:var(--muted); margin:6px 0; line-height:1.45; }
+.modal .modal-actions{ margin-top:12px; display:flex; justify-content:flex-end; gap:8px; }
 
-@keyframes glow {
-  from {
-    text-shadow: 0 0 10px #ff0000;
-  }
-  to {
-    text-shadow: 0 0 25px #ff5555, 0 0 40px #ff0000;
-  }
-}
+/* main UI */
+.game-root{ position:fixed; inset:0; display:flex; align-items:flex-start; justify-content:center; z-index:10; }
+#gameCanvas{ width:100%; height:100vh; display:block; background:#02040a; }
 
-.loading-bar-container {
-  width: 60%;
-  height: 20px;
-  background: #222;
-  border-radius: 15px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-}
+/* HUD */
+.hud{ position:absolute; left:16px; right:16px; top:10px; display:flex; justify-content:space-between; gap:8px; align-items:flex-start; z-index:20; pointer-events:none; }
+.hud *{ pointer-events:auto; }
+.hud-left, .hud-right{ display:flex; gap:12px; align-items:center; }
+.status{ font-weight:700; color:var(--accent-2); text-shadow:0 6px 18px rgba(0,255,153,0.04); }
+.bars{ display:flex; flex-direction:column; gap:4px; color:var(--muted); font-size:0.9rem; }
+.bar-row{ display:flex; gap:8px; align-items:center; }
+.bar-label{ color:var(--muted); font-size:.88rem; min-width:60px; }
+.bar-value{ color:#fff; font-weight:600; }
 
-.loading-bar {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #ff0000, #ff9900);
-  animation: loadingAnim 3s infinite;
-}
+/* minimap canvas */
+.minimap{ width:140px; height:90px; background:rgba(0,0,0,0.25); border-radius:8px; border:1px solid rgba(255,255,255,0.04); }
 
-@keyframes loadingAnim {
-  0% { width: 0; }
-  50% { width: 80%; }
-  100% { width: 0; }
-}
+/* joystick (mobile) */
+.joystick{ position:fixed; bottom:24px; left:22px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; z-index:22; }
+.stick{ width:56px; height:56px; border-radius:50%; background:linear-gradient(180deg, rgba(255,75,75,0.9), rgba(170,0,0,0.8)); box-shadow:0 12px 30px rgba(0,0,0,0.6); transform:translate(0,0); transition:transform .06s linear; }
 
-.loading-text {
-  font-size: 1.2em;
-  color: #bbb;
-}
+/* overlays */
+.overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:30; pointer-events:none; }
+.overlay-card{ pointer-events:auto; width:min(520px,92%); padding:20px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); box-shadow:0 10px 40px rgba(0,0,0,0.7); text-align:center; }
+.overlay-actions{ display:flex; gap:10px; justify-content:center; margin-top:16px; }
 
-/* ===============================
-   MAIN MENU
-   =============================== */
-.game-title {
-  font-size: 4em;
-  margin-bottom: 2rem;
-  text-shadow: 0 0 15px #ff4444, 0 0 30px #ff0000;
-}
+/* notif area */
+#notifArea{ position:fixed; right:22px; top:20px; z-index:60; display:flex; flex-direction:column; gap:8px; }
+.notif{ background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(255,255,255,0.02)); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); color:#fff; box-shadow:0 8px 18px rgba(0,0,0,0.5); }
 
-.menu-btn {
-  padding: 15px 40px;
-  margin: 10px;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.3em;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #ff0000, #aa0000);
-  cursor: pointer;
-  transition: transform 0.2s, background 0.4s;
-  box-shadow: 0 5px 15px rgba(255, 0, 0, 0.5);
-}
+/* small footer */
+.footer{ position:fixed; bottom:8px; left:0; right:0; text-align:center; color:var(--muted); font-size:.82rem; z-index:2; }
 
-.menu-btn:hover {
-  background: linear-gradient(135deg, #ff3333, #cc0000);
-  transform: scale(1.05);
-}
-
-/* ===============================
-   SETTINGS MENU
-   =============================== */
-#settings-menu label {
-  display: flex;
-  justify-content: space-between;
-  width: 60%;
-  margin: 10px 0;
-  font-size: 1.2em;
-}
-
-#settings-menu input[type="range"] {
-  flex: 1;
-  margin-left: 20px;
-}
-
-/* ===============================
-   GAME CONTAINER
-   =============================== */
-#game-container {
-  position: relative;
-  flex: 1;
-  background: #000;
-}
-
-#gameCanvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* ===============================
-   HUD
-   =============================== */
-#hud {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  z-index: 5;
-}
-
-.hud-left {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.health-bar, .energy-bar {
-  background: #333;
-  border-radius: 10px;
-  overflow: hidden;
-  width: 200px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  padding-left: 5px;
-  font-size: 0.9em;
-}
-
-#health-fill {
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(90deg, #ff0000, #ff6666);
-  transition: width 0.3s;
-}
-
-#energy-fill {
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(90deg, #00ffff, #0088ff);
-  transition: width 0.3s;
-}
-
-.hud-right #mini-map {
-  width: 150px;
-  height: 150px;
-  background: rgba(0,0,0,0.4);
-  border: 2px solid #fff;
-  border-radius: 12px;
-}
-
-/* ===============================
-   OVERLAYS (Pause, Game Over, etc.)
-   =============================== */
-.overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.9);
-  padding: 40px;
-  border-radius: 20px;
-  text-align: center;
-  z-index: 20;
-  color: #fff;
-  width: 80%;
-  max-width: 500px;
-  box-shadow: 0 0 30px rgba(255,0,0,0.7);
-}
-
-.overlay h2 {
-  margin-bottom: 20px;
-  font-size: 2.5em;
-  text-shadow: 0 0 10px #ff0000;
-}
-
-.overlay p {
-  margin-bottom: 20px;
-  font-size: 1.2em;
-}
-
-/* ===============================
-   MOBILE JOYSTICK
-   =============================== */
-#joystick-container {
-  position: absolute;
-  bottom: 30px;
-  left: 30px;
-  width: 120px;
-  height: 120px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 15;
-}
-
-#joystick {
-  width: 60px;
-  height: 60px;
-  background: rgba(255,0,0,0.7);
-  border-radius: 50%;
-  position: relative;
-  touch-action: none;
-}
-
-/* ===============================
-   FOOTER
-   =============================== */
-footer {
-  position: absolute;
-  bottom: 5px;
-  width: 100%;
-  text-align: center;
-  font-size: 0.8em;
-  color: #666;
-}
-
-/* ===============================
-   RESPONSIVE DESIGN
-   =============================== */
-@media (max-width: 768px) {
-  .game-title {
-    font-size: 2.5em;
-  }
-
-  .menu-btn {
-    width: 80%;
-    font-size: 1.1em;
-  }
-
-  .hud-left {
-    scale: 0.8;
-  }
-
-  #hud {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  #mini-map {
-    width: 100px !important;
-    height: 100px !important;
-  }
-
-  #joystick-container {
-    display: flex;
-  }
-}
-
-@media (min-width: 769px) {
-  #joystick-container {
-    display: none;
-  }
-}
-
-/* ===============================
-   EXTRA POLISH (Luxury Feel)
-   =============================== */
-.menu-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 5px rgba(255, 0, 0, 0.7);
-}
-
-.screen h2 {
-  font-size: 2em;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 0 10px #ff0000;
-}
-
-ul {
-  list-style: none;
-  margin: 1rem 0;
-  padding: 0;
-}
-
-ul li {
-  margin: 0.5rem 0;
-  font-size: 1.1em;
+/* responsive */
+@media (max-width: 800px){
+  .menu-header .title{ font-size:28px; }
+  .menu-buttons{ width:92%; }
+  .modal-card{ width:92%; }
+  .hud{ top:8px; left:8px; right:8px; }
+  .joystick{ left:12px; bottom:12px; width:110px; height:110px; }
 }
