@@ -7,109 +7,165 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen">
-        <div class="ninja-loader"></div>
-        <div class="loading-text">Loading Shadow Clone Escape...</div>
-    </div>
-
-    <!-- Main Menu -->
-    <div id="mainMenu">
-        <h1 class="game-logo">SHADOW CLONE ESCAPE</h1>
-        <button class="menu-button" onclick="startGame()">START GAME</button>
-        <button class="menu-button" onclick="showSettings()">SETTINGS</button>
-        <button class="menu-button" onclick="showLeaderboard()">LEADERBOARD</button>
-        <button class="menu-button" onclick="showHowToPlay()">HOW TO PLAY</button>
-    </div>
-
-    <!-- Game Canvas -->
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- HUD -->
-    <div class="hud" id="hud" style="display: none;">
-        <div>Score: <span id="score">0</span></div>
-        <div>Lives: <span id="lives">3</span></div>
-        <div>Level: <span id="level">1</span></div>
-    </div>
-
-    <!-- Mini-map -->
-    <canvas class="minimap" id="minimap" style="display: none;"></canvas>
-
-    <!-- Mobile Controls -->
-    <div class="mobile-controls">
-        <div class="joystick" id="joystick">
-            <div class="joystick-handle" id="joystickHandle"></div>
-        </div>
-        <div class="action-buttons">
-            <button class="action-btn" id="spawnBtn">SPAWN</button>
-            <button class="action-btn" id="menuBtn">MENU</button>
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-ninja"></div>
+            <div class="loading-text">Shadow Clone Escape</div>
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+            <div class="loading-status">Loading...</div>
         </div>
     </div>
 
-    <!-- Settings Overlay -->
-    <div class="overlay" id="settingsOverlay">
+    <div id="mainMenu" class="menu-screen hidden">
+        <div class="menu-bg"></div>
+        <div class="menu-content">
+            <div class="logo-container">
+                <h1 class="game-logo">Shadow Clone Escape</h1>
+                <div class="logo-glow"></div>
+            </div>
+            <div class="menu-buttons">
+                <button id="startBtn" class="menu-btn">Start Game</button>
+                <button id="settingsBtn" class="menu-btn">Settings</button>
+                <button id="leaderboardBtn" class="menu-btn">Leaderboard</button>
+                <button id="howToPlayBtn" class="menu-btn">How to Play</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="game-screen hidden">
+        <canvas id="gameCanvas"></canvas>
+        <div id="gameHUD" class="game-hud">
+            <div class="hud-top">
+                <div class="hud-score">Score: <span id="scoreValue">0</span></div>
+                <div class="hud-lives">Lives: <span id="livesValue">3</span></div>
+            </div>
+            <div class="hud-bottom">
+                <div id="miniMap" class="mini-map"></div>
+                <button id="pauseBtn" class="pause-btn">⏸</button>
+            </div>
+        </div>
+        <div id="mobileControls" class="mobile-controls">
+            <div id="joystick" class="joystick">
+                <div class="joystick-base">
+                    <div class="joystick-knob"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pauseMenu" class="overlay-menu hidden">
         <div class="overlay-content">
-            <button class="close-btn" onclick="hideOverlay('settingsOverlay')">&times;</button>
+            <h2>Game Paused</h2>
+            <div class="menu-buttons">
+                <button id="resumeBtn" class="menu-btn">Resume</button>
+                <button id="pauseSettingsBtn" class="menu-btn">Settings</button>
+                <button id="mainMenuBtn" class="menu-btn">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverMenu" class="overlay-menu hidden">
+        <div class="overlay-content">
+            <h2>Game Over</h2>
+            <div class="final-score">Final Score: <span id="finalScore">0</span></div>
+            <div class="menu-buttons">
+                <button id="restartBtn" class="menu-btn">Play Again</button>
+                <button id="gameOverMainMenuBtn" class="menu-btn">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="levelCompleteMenu" class="overlay-menu hidden">
+        <div class="overlay-content">
+            <h2>Level Complete!</h2>
+            <div class="level-stats">
+                <div>Level <span id="completedLevel">1</span></div>
+                <div>Score: <span id="levelScore">0</span></div>
+            </div>
+            <div class="menu-buttons">
+                <button id="nextLevelBtn" class="menu-btn">Next Level</button>
+                <button id="levelMainMenuBtn" class="menu-btn">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsMenu" class="overlay-menu hidden">
+        <div class="overlay-content">
             <h2>Settings</h2>
-            <div class="slider-container">
-                <label>Music Volume:</label>
-                <input type="range" class="slider" id="musicSlider" min="0" max="100" value="70">
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label>Music Volume</label>
+                    <input type="range" id="musicVolume" min="0" max="100" value="50" class="slider">
+                    <span id="musicVolumeValue">50</span>%
+                </div>
+                <div class="setting-item">
+                    <label>SFX Volume</label>
+                    <input type="range" id="sfxVolume" min="0" max="100" value="50" class="slider">
+                    <span id="sfxVolumeValue">50</span>%
+                </div>
+                <div class="setting-item">
+                    <label>Graphics Quality</label>
+                    <select id="graphicsQuality" class="quality-select">
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
             </div>
-            <div class="slider-container">
-                <label>SFX Volume:</label>
-                <input type="range" class="slider" id="sfxSlider" min="0" max="100" value="80">
+            <div class="menu-buttons">
+                <button id="closeSettingsBtn" class="menu-btn">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Leaderboard Overlay -->
-    <div class="overlay" id="leaderboardOverlay">
+    <div id="leaderboardMenu" class="overlay-menu hidden">
         <div class="overlay-content">
-            <button class="close-btn" onclick="hideOverlay('leaderboardOverlay')">&times;</button>
             <h2>Leaderboard</h2>
-            <div id="leaderboardList">
-                <div>1. Master Ninja - 15,420</div>
-                <div>2. Shadow Walker - 12,800</div>
-                <div>3. Clone Master - 10,500</div>
-                <div>4. Stealth Pro - 8,900</div>
-                <div>5. Portal Runner - 7,650</div>
+            <div id="leaderboardList" class="leaderboard-list">
+                <div class="leaderboard-item">
+                    <span class="rank">1.</span>
+                    <span class="name">Player</span>
+                    <span class="score">0</span>
+                </div>
+            </div>
+            <div class="menu-buttons">
+                <button id="closeLeaderboardBtn" class="menu-btn">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- How to Play Overlay -->
-    <div class="overlay" id="howToPlayOverlay">
+    <div id="howToPlayMenu" class="overlay-menu hidden">
         <div class="overlay-content">
-            <button class="close-btn" onclick="hideOverlay('howToPlayOverlay')">&times;</button>
             <h2>How to Play</h2>
-            <div>
-                <h3>Controls:</h3>
-                <p><strong>Desktop:</strong> Use WASD or Arrow Keys to move</p>
-                <p><strong>Mobile:</strong> Use the virtual joystick</p>
-                <p><strong>Space/Spawn Button:</strong> Create shadow clones</p>
-                
-                <h3>Objective:</h3>
-                <p>Navigate through mazes using your ninja and shadow clones to reach the portal. Collect powerups and avoid hazards!</p>
-                
-                <h3>Powerups:</h3>
-                <p>🚀 <strong>Speed Boost:</strong> Increases movement speed</p>
-                <p>👻 <strong>Cloak:</strong> Temporary invisibility</p>
-                <p>👥 <strong>Extra Clone:</strong> Spawn additional clones</p>
-                
-                <h3>Tips:</h3>
-                <p>• Use clones strategically to solve puzzles</p>
-                <p>• Collect all powerups for maximum score</p>
-                <p>• Each level increases in difficulty</p>
+            <div class="how-to-play-content">
+                <div class="instruction-section">
+                    <h3>Controls</h3>
+                    <p><strong>PC:</strong> Use WASD or Arrow Keys to move</p>
+                    <p><strong>Mobile:</strong> Use the virtual joystick</p>
+                    <p><strong>Pause:</strong> Press ESC or tap the pause button</p>
+                </div>
+                <div class="instruction-section">
+                    <h3>Objective</h3>
+                    <p>Navigate through the maze to reach the glowing portal while avoiding shadow clones.</p>
+                </div>
+                <div class="instruction-section">
+                    <h3>Enemies</h3>
+                    <p><strong>Idle Clone:</strong> Slow but persistent follower</p>
+                    <p><strong>Wraith Clone:</strong> Fast and aggressive</p>
+                    <p><strong>Ghost Clone:</strong> Can teleport short distances</p>
+                </div>
+                <div class="instruction-section">
+                    <h3>Powerups</h3>
+                    <p><strong>Speed Boost:</strong> Temporary increased movement speed</p>
+                    <p><strong>Cloak:</strong> Become invisible to clones</p>
+                    <p><strong>Extra Life:</strong> Gain an additional life</p>
+                </div>
+            </div>
+            <div class="menu-buttons">
+                <button id="closeHowToPlayBtn" class="menu-btn">Close</button>
             </div>
         </div>
-    </div>
-
-    <!-- Game Over Screen -->
-    <div class="game-over" id="gameOverScreen">
-        <h2>MISSION COMPLETE!</h2>
-        <p id="finalScore">Final Score: 0</p>
-        <button class="menu-button" onclick="restartGame()">PLAY AGAIN</button>
-        <button class="menu-button" onclick="backToMenu()">MAIN MENU</button>
     </div>
 
     <script src="script.js"></script>
