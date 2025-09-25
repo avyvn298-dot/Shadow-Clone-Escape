@@ -8,8 +8,7 @@ const ASSETS = {
   ninja: 'assets/ninja_spritesheet.png',   // expected 1536x534, 4 frames horizontally
   clones: 'assets/clones_spritesheet.png', // expected 1060x433, 3 frames horizontally
   portal: 'assets/portal.png',             // expected 361x316
-  background: 'assets/background.png',
-  bgLayers: ['assets/bg_layer1.png','assets/bg_layer2.png','assets/bg_layer3.png'],
+  background: 'background.png',
   bgMusic: 'assets/bg_music_loop.wav',
   spawnSfx: 'assets/spawn.wav',
   pickupSfx: 'assets/powerup.wav',
