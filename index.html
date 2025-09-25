@@ -1,122 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ninja Clone Escape - AAA Edition</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shadow Clone Escape — AAA Student Build</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="Shadow Clone Escape — endless ninja survival maze.">
+  <!-- Optional favicon -->
+  <link rel="icon" href="favicon.png" type="image/png">
 </head>
 <body>
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen" class="screen active">
-    <div class="loading-logo">Ninja Clone Escape</div>
-    <div class="loading-bar-container">
-      <div class="loading-bar"></div>
+  <!-- PRELOADER -->
+  <div id="preloader" class="overlay-preloader">
+    <div class="pre-inner">
+      <div class="logo">Shadow Clone Escape</div>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+      <p id="preloadText">Preparing assets...</p>
+      <small class="muted">If loading stays stuck, press Start (assets optional).</small>
     </div>
-    <p class="loading-text">Loading assets...</p>
   </div>
 
-  <!-- MAIN MENU -->
-  <div id="main-menu" class="screen hidden">
-    <h1 class="game-title">Ninja Clone Escape</h1>
-    <button id="start-btn" class="menu-btn">Start Game</button>
-    <button id="tutorial-btn" class="menu-btn">Tutorial</button>
-    <button id="settings-btn" class="menu-btn">Settings</button>
-    <button id="credits-btn" class="menu-btn">Credits</button>
-  </div>
+  <!-- START MENU -->
+  <main id="mainMenu" class="menu screen centered">
+    <header class="menu-header">
+      <h1 class="title">Shadow Clone Escape</h1>
+      <p class="subtitle">Dodge your past. Survive the echoes.</p>
+    </header>
 
-  <!-- SETTINGS MENU -->
-  <div id="settings-menu" class="screen hidden">
-    <h2>Settings</h2>
-    <label>
-      <span>Music Volume</span>
-      <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.5" />
-    </label>
-    <label>
-      <span>Sound Effects</span>
-      <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="0.5" />
-    </label>
-    <button id="close-settings" class="menu-btn">Back</button>
-  </div>
+    <section class="menu-buttons">
+      <button id="btnStart" class="btn primary large">START</button>
+      <button id="btnTutorial" class="btn">TUTORIAL</button>
+      <button id="btnSettings" class="btn">SETTINGS</button>
+      <button id="btnCredits" class="btn">CREDITS</button>
+      <div class="menu-extra">
+        <button id="btnLeaderboard" class="btn small">LEADERBOARD</button>
+        <a class="small muted">Built for college — deliverable ready</a>
+      </div>
+    </section>
 
-  <!-- TUTORIAL MENU -->
-  <div id="tutorial-menu" class="screen hidden">
-    <h2>How to Play</h2>
-    <ul>
-      <li>Use <b>WASD</b> to move (PC).</li>
-      <li>Use on-screen joystick (Mobile).</li>
-      <li>Collect power-ups and avoid traps.</li>
-      <li>Defeat clones and reach the portal.</li>
-    </ul>
-    <button id="close-tutorial" class="menu-btn">Got it!</button>
-  </div>
+    <footer class="menu-footer">
+      <small>© 2025 — Shadow Clone Escape • AAA Student Build</small>
+    </footer>
+  </main>
 
-  <!-- CREDITS MENU -->
-  <div id="credits-menu" class="screen hidden">
-    <h2>Credits</h2>
-    <p>Developed by: You + Divine AAA Game Dev</p>
-    <p>Art, Sound, Code: Custom AAA Build</p>
-    <button id="close-credits" class="menu-btn">Back</button>
-  </div>
+  <!-- TUTORIAL -->
+  <section id="tutorial" class="modal hidden">
+    <div class="modal-card">
+      <h2>Tutorial</h2>
+      <ol>
+        <li>Move using <b>WASD</b> or arrow keys. On mobile, use the joystick.</li>
+        <li>Each step you take is recorded. Clones replay your previous path.</li>
+        <li>Collect power-ups: <b>Speed</b>, <b>Cloak</b>, <b>Shock</b>.</li>
+        <li>Reach the glowing portal to advance levels. Don't touch clones (unless cloaked).</li>
+      </ol>
+      <div class="modal-actions">
+        <button id="closeTutorial" class="btn">Close</button>
+      </div>
+    </div>
+  </section>
 
-  <!-- GAME CONTAINER -->
-  <div id="game-container" class="hidden">
-    <canvas id="gameCanvas"></canvas>
-<canvas id="gameCanvas" width="1280" height="720"></canvas>
+  <!-- SETTINGS -->
+  <section id="settings" class="modal hidden">
+    <div class="modal-card">
+      <h2>Settings</h2>
+      <label>Music: <input id="musicToggle" type="checkbox" checked></label>
+      <label>SFX: <input id="sfxToggle" type="checkbox" checked></label>
+      <label>Music volume: <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45"></label>
+      <label>SFX volume: <input id="sfxVolume" type="range" min="0" max="1" step="0.05" value="1.0"></label>
+      <label>Difficulty:
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="nightmare">Nightmare</option>
+        </select>
+      </label>
+      <div class="modal-actions">
+        <button id="closeSettings" class="btn">Save</button>
+      </div>
+    </div>
+  </section>
 
-    <!-- HUD -->
-    <div id="hud">
+  <!-- CREDITS -->
+  <section id="credits" class="modal hidden">
+    <div class="modal-card">
+      <h2>Credits</h2>
+      <p>Design & Code: You (student) + AI-assisted AAA workflow</p>
+      <p>Art: Generated PNGs (spritesheets)</p>
+      <p>Audio: Procedural fallback + optional WAVs in /assets/</p>
+      <div class="modal-actions">
+        <button id="closeCredits" class="btn">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="leaderboard" class="modal hidden">
+    <div class="modal-card">
+      <h2>Leaderboard — Local</h2>
+      <ol id="leaderboardList"></ol>
+      <div style="display:flex;gap:.5rem;justify-content:center;margin-top:10px">
+        <button id="clearLeaderboard" class="btn small">Clear</button>
+        <button id="closeLeaderboard" class="btn small">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME UI / CANVAS -->
+  <div id="ui" class="game-root hidden">
+    <canvas id="gameCanvas" width="1280" height="720" aria-label="Game Canvas"></canvas>
+
+    <div id="hud" class="hud">
       <div class="hud-left">
-        <div class="health-bar">
-          <span>Health:</span>
-          <div id="health-fill"></div>
-        </div>
-        <div class="energy-bar">
-          <span>Energy:</span>
-          <div id="energy-fill"></div>
+        <div id="status" class="status">Ready</div>
+        <div class="bars">
+          <div class="bar-row"><div class="bar-label">Time</div><div id="timer" class="bar-value">0s</div></div>
+          <div class="bar-row"><div class="bar-label">Power</div><div id="powerupBox" class="bar-value"></div></div>
         </div>
       </div>
+
+      <div class="hud-center">
+        <button id="pauseBtn" class="btn small">Menu</button>
+      </div>
+
       <div class="hud-right">
-        <canvas id="mini-map"></canvas>
+        <canvas id="miniMap" width="140" height="90" class="minimap"></canvas>
       </div>
     </div>
 
-    <!-- PAUSE MENU -->
-    <div id="pause-menu" class="overlay hidden">
-      <h2>Game Paused</h2>
-      <button id="resume-btn" class="menu-btn">Resume</button>
-      <button id="restart-btn" class="menu-btn">Restart</button>
-      <button id="pause-settings-btn" class="menu-btn">Settings</button>
-      <button id="quit-btn" class="menu-btn">Quit</button>
+    <!-- mobile joystick -->
+    <div id="joystickContainer" class="joystick hidden">
+      <div id="joystick" class="stick"></div>
+    </div>
+
+    <!-- pause overlay -->
+    <div id="menuOverlay" class="overlay hidden">
+      <div class="overlay-card">
+        <h2>Paused</h2>
+        <div class="overlay-actions">
+          <button id="resumeBtn" class="btn">Resume</button>
+          <button id="restartBtn" class="btn">Restart</button>
+          <button id="backMenuBtn" class="btn">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- game over -->
+    <div id="gameOver" class="overlay hidden">
+      <div class="overlay-card">
+        <h2>Game Over</h2>
+        <p id="gameOverText">You survived 0s</p>
+        <div class="overlay-actions">
+          <button id="retryBtn" class="btn">Retry</button>
+          <button id="quitBtn" class="btn">Quit</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- MOBILE JOYSTICK -->
-  <div id="joystick-container" class="hidden">
-    <div id="joystick"></div>
-  </div>
+  <!-- notification area -->
+  <div id="notifArea" aria-hidden="true"></div>
 
-  <!-- GAME OVER SCREEN -->
-  <div id="game-over" class="overlay hidden">
-    <h2>Game Over</h2>
-    <p id="final-score">Score: 0</p>
-    <button id="retry-btn" class="menu-btn">Retry</button>
-    <button id="go-menu-btn" class="menu-btn">Main Menu</button>
-  </div>
-
-  <!-- LEVEL COMPLETE SCREEN -->
-  <div id="level-complete" class="overlay hidden">
-    <h2>Level Complete!</h2>
-    <p id="level-stats">Stats here...</p>
-    <button id="next-level-btn" class="menu-btn">Next Level</button>
-  </div>
-
-  <!-- FOOTER -->
-  <footer>
-    <p>&copy; 2025 Ninja Clone Escape. All Rights Reserved.</p>
+  <!-- small attribution/footer -->
+  <footer class="footer">
+    <small>Use a local static server for best results. Place assets in /assets/ (optional).</small>
   </footer>
 
-  <!-- SCRIPT -->
+  <!-- script -->
   <script src="script.js"></script>
 </body>
 </html>
