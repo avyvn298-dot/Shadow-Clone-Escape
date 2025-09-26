@@ -4,169 +4,501 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shadow Clone Escape</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- 
+    EXPECTED ASSETS:
+    - assets/ninja_spritesheet.png (1536x534, 4 frames horizontally)
+    - assets/clones_spritesheet.png (1060x433, 3 frames horizontally) 
+    - assets/portal.png (361x316)
+    - background.png (1920x1080 or 1280x720)
+    - maze_bg.png (1280x720)
+    - assets/powerup_speed.png (64x64)
+    - assets/powerup_cloak.png (64x64)  
+    - assets/powerup_clone.png (64x64)
+    - assets/bg_music_loop.wav
+    - assets/spawn.wav
+    - assets/powerup.wav
+    - assets/portal.wav
+    - assets/death.wav
+    - assets/newrecord.wav
+    - assets/footstep.wav
+    -->
 </head>
 <body>
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-content">
-            <div class="loading-ninja"></div>
-            <div class="loading-text">Shadow Clone Escape</div>
-            <div class="loading-progress">
-                <div class="loading-bar"></div>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="screen loading-screen">
+        <div class="loading-container">
+            <div class="loading-ninja" id="loadingNinja"></div>
+            <h1 class="loading-title">SHADOW CLONE ESCAPE</h1>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
             </div>
-            <div class="loading-status">Loading...</div>
+            <div class="loading-text" id="loadingText">Loading assets...</div>
+            <div class="loading-progress" id="loadingProgress">0%</div>
         </div>
+        <div class="loading-particles" id="loadingParticles"></div>
     </div>
 
-    <div id="mainMenu" class="menu-screen hidden">
+    <!-- Main Menu -->
+    <div id="mainMenu" class="screen main-menu hidden">
         <div class="menu-bg"></div>
-        <div class="menu-content">
+        <div class="menu-container">
             <div class="logo-container">
-                <h1 class="game-logo">Shadow Clone Escape</h1>
+                <h1 class="game-logo">
+                    <span class="logo-shadow">SHADOW</span>
+                    <span class="logo-clone">CLONE</span>
+                    <span class="logo-escape">ESCAPE</span>
+                </h1>
                 <div class="logo-glow"></div>
             </div>
-            <div class="menu-buttons">
-                <button id="startBtn" class="menu-btn">Start Game</button>
-                <button id="settingsBtn" class="menu-btn">Settings</button>
-                <button id="leaderboardBtn" class="menu-btn">Leaderboard</button>
-                <button id="howToPlayBtn" class="menu-btn">How to Play</button>
-            </div>
+            
+            <nav class="main-nav">
+                <button id="startBtn" class="menu-btn primary-btn">
+                    <span class="btn-glow"></span>
+                    <span class="btn-text">START GAME</span>
+                </button>
+                <button id="settingsBtn" class="menu-btn secondary-btn">
+                    <span class="btn-glow"></span>
+                    <span class="btn-text">SETTINGS</span>
+                </button>
+                <button id="leaderboardBtn" class="menu-btn secondary-btn">
+                    <span class="btn-glow"></span>
+                    <span class="btn-text">LEADERBOARD</span>
+                </button>
+                <button id="howToPlayBtn" class="menu-btn secondary-btn">
+                    <span class="btn-glow"></span>
+                    <span class="btn-text">HOW TO PLAY</span>
+                </button>
+            </nav>
+            
+            <div class="version-info">v1.0.0</div>
         </div>
+        <div class="menu-particles"></div>
     </div>
 
-    <div id="gameScreen" class="game-screen hidden">
-        <canvas id="gameCanvas"></canvas>
-        <div id="gameHUD" class="game-hud">
-            <div class="hud-top">
-                <div class="hud-score">Score: <span id="scoreValue">0</span></div>
-                <div class="hud-lives">Lives: <span id="livesValue">3</span></div>
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen game-screen hidden">
+        <div class="game-container">
+            <!-- Main Game Canvas -->
+            <canvas id="gameCanvas" class="game-canvas"></canvas>
+            
+            <!-- Game HUD -->
+            <div class="game-hud">
+                <div class="hud-top">
+                    <div class="hud-left">
+                        <div class="timer-container">
+                            <span class="hud-label">TIME</span>
+                            <span id="timer" class="timer">00:00</span>
+                        </div>
+                        <div class="best-time-container">
+                            <span class="hud-label">BEST</span>
+                            <span id="bestTime" class="best-time">--:--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hud-center">
+                        <div id="status" class="game-status">LEVEL 1</div>
+                    </div>
+                    
+                    <div class="hud-right">
+                        <div id="powerupBox" class="powerup-box">
+                            <div class="powerup-icon" id="powerupIcon"></div>
+                            <div class="powerup-timer" id="powerupTimer"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hud-bottom">
+                    <div class="hud-left">
+                        <button id="pauseBtn" class="control-btn pause-btn">
+                            <span class="btn-icon">⏸</span>
+                        </button>
+                    </div>
+                    
+                    <div class="hud-right">
+                        <div class="minimap-container">
+                            <canvas id="miniMap" class="minimap"></canvas>
+                            <div class="minimap-label">MAP</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="hud-bottom">
-                <div id="miniMap" class="mini-map"></div>
-                <button id="pauseBtn" class="pause-btn">⏸</button>
-            </div>
-        </div>
-        <div id="mobileControls" class="mobile-controls">
-            <div id="joystick" class="joystick">
-                <div class="joystick-base">
-                    <div class="joystick-knob"></div>
+            
+            <!-- Mobile Controls -->
+            <div id="mobileControls" class="mobile-controls hidden">
+                <div id="joystick" class="joystick">
+                    <div class="joystick-base">
+                        <div class="joystick-knob" id="joystickKnob"></div>
+                        <div class="joystick-glow"></div>
+                    </div>
+                </div>
+                <div class="mobile-actions">
+                    <button id="mobilePauseBtn" class="mobile-btn">
+                        <span class="btn-icon">⏸</span>
+                    </button>
                 </div>
             </div>
         </div>
+        
+        <!-- Game Particles -->
+        <div id="gameParticles" class="game-particles"></div>
     </div>
 
+    <!-- Pause Menu -->
     <div id="pauseMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>Game Paused</h2>
-            <div class="menu-buttons">
-                <button id="resumeBtn" class="menu-btn">Resume</button>
-                <button id="pauseSettingsBtn" class="menu-btn">Settings</button>
-                <button id="mainMenuBtn" class="menu-btn">Main Menu</button>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">GAME PAUSED</h2>
+            </div>
+            <div class="modal-content">
+                <nav class="pause-nav">
+                    <button id="resumeBtn" class="menu-btn primary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">RESUME</span>
+                    </button>
+                    <button id="pauseSettingsBtn" class="menu-btn secondary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">SETTINGS</span>
+                    </button>
+                    <button id="restartBtn" class="menu-btn secondary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">RESTART</span>
+                    </button>
+                    <button id="mainMenuBtn" class="menu-btn tertiary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">MAIN MENU</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </div>
 
+    <!-- Game Over Menu -->
     <div id="gameOverMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>Game Over</h2>
-            <div class="final-score">Final Score: <span id="finalScore">0</span></div>
-            <div class="menu-buttons">
-                <button id="restartBtn" class="menu-btn">Play Again</button>
-                <button id="gameOverMainMenuBtn" class="menu-btn">Main Menu</button>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal">
+            <div class="modal-header">
+                <h2 class="modal-title game-over-title">GAME OVER</h2>
+            </div>
+            <div class="modal-content">
+                <div class="game-over-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">TIME SURVIVED</span>
+                        <span id="finalTime" class="stat-value">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">LEVEL REACHED</span>
+                        <span id="finalLevel" class="stat-value">1</span>
+                    </div>
+                    <div class="stat-item" id="newRecordIndicator" style="display: none;">
+                        <span class="new-record">🏆 NEW RECORD!</span>
+                    </div>
+                </div>
+                
+                <div id="nameInputContainer" class="name-input-container" style="display: none;">
+                    <label for="playerNameInput" class="input-label">ENTER YOUR NAME</label>
+                    <input type="text" id="playerNameInput" class="name-input" maxlength="12" placeholder="NINJA">
+                    <button id="submitNameBtn" class="menu-btn primary-btn small-btn">
+                        <span class="btn-text">SAVE</span>
+                    </button>
+                </div>
+                
+                <nav class="game-over-nav">
+                    <button id="playAgainBtn" class="menu-btn primary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">PLAY AGAIN</span>
+                    </button>
+                    <button id="gameOverMainMenuBtn" class="menu-btn secondary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">MAIN MENU</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </div>
 
+    <!-- Level Complete Menu -->
     <div id="levelCompleteMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>Level Complete!</h2>
-            <div class="level-stats">
-                <div>Level <span id="completedLevel">1</span></div>
-                <div>Score: <span id="levelScore">0</span></div>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal">
+            <div class="modal-header">
+                <h2 class="modal-title level-complete-title">LEVEL COMPLETE!</h2>
             </div>
-            <div class="menu-buttons">
-                <button id="nextLevelBtn" class="menu-btn">Next Level</button>
-                <button id="levelMainMenuBtn" class="menu-btn">Main Menu</button>
+            <div class="modal-content">
+                <div class="level-complete-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">LEVEL</span>
+                        <span id="completedLevelNum" class="stat-value">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">TIME</span>
+                        <span id="levelTime" class="stat-value">00:00</span>
+                    </div>
+                </div>
+                
+                <nav class="level-complete-nav">
+                    <button id="nextLevelBtn" class="menu-btn primary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">NEXT LEVEL</span>
+                    </button>
+                    <button id="levelCompleteMainMenuBtn" class="menu-btn secondary-btn">
+                        <span class="btn-glow"></span>
+                        <span class="btn-text">MAIN MENU</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </div>
 
+    <!-- Settings Menu -->
     <div id="settingsMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>Settings</h2>
-            <div class="settings-content">
-                <div class="setting-item">
-                    <label>Music Volume</label>
-                    <input type="range" id="musicVolume" min="0" max="100" value="50" class="slider">
-                    <span id="musicVolumeValue">50</span>%
-                </div>
-                <div class="setting-item">
-                    <label>SFX Volume</label>
-                    <input type="range" id="sfxVolume" min="0" max="100" value="50" class="slider">
-                    <span id="sfxVolumeValue">50</span>%
-                </div>
-                <div class="setting-item">
-                    <label>Graphics Quality</label>
-                    <select id="graphicsQuality" class="quality-select">
-                        <option value="high">High</option>
-                        <option value="low">Low</option>
-                    </select>
-                </div>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal settings-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">SETTINGS</h2>
+                <button id="closeSettingsBtn" class="close-btn">&times;</button>
             </div>
-            <div class="menu-buttons">
-                <button id="closeSettingsBtn" class="menu-btn">Close</button>
+            <div class="modal-content">
+                <div class="settings-grid">
+                    <!-- Audio Settings -->
+                    <div class="settings-section">
+                        <h3 class="section-title">AUDIO</h3>
+                        <div class="setting-row">
+                            <label class="setting-label">Music</label>
+                            <div class="setting-control">
+                                <input type="checkbox" id="musicToggle" class="toggle-input">
+                                <label for="musicToggle" class="toggle-label"></label>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <label class="setting-label">Music Volume</label>
+                            <div class="setting-control">
+                                <input type="range" id="musicVolume" class="slider" min="0" max="100" value="70">
+                                <span id="musicVolumeValue" class="slider-value">70%</span>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <label class="setting-label">SFX</label>
+                            <div class="setting-control">
+                                <input type="checkbox" id="sfxToggle" class="toggle-input">
+                                <label for="sfxToggle" class="toggle-label"></label>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <label class="setting-label">SFX Volume</label>
+                            <div class="setting-control">
+                                <input type="range" id="sfxVolume" class="slider" min="0" max="100" value="80">
+                                <span id="sfxVolumeValue" class="slider-value">80%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Settings -->
+                    <div class="settings-section">
+                        <h3 class="section-title">GAME</h3>
+                        <div class="setting-row">
+                            <label class="setting-label">Difficulty</label>
+                            <div class="setting-control">
+                                <select id="difficultySelect" class="select-input">
+                                    <option value="easy">Easy</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="hard">Hard</option>
+                                    <option value="nightmare">Nightmare</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <label class="setting-label">Particles</label>
+                            <div class="setting-control">
+                                <input type="checkbox" id="particlesToggle" class="toggle-input" checked>
+                                <label for="particlesToggle" class="toggle-label"></label>
+                            </div>
+                        </div>
+                        <div class="setting-row" id="joystickSensitivityRow">
+                            <label class="setting-label">Joystick Sensitivity</label>
+                            <div class="setting-control">
+                                <input type="range" id="joystickSensitivity" class="slider" min="0.3" max="1.5" step="0.1" value="1.0">
+                                <span id="joystickSensitivityValue" class="slider-value">1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button id="resetSettingsBtn" class="menu-btn tertiary-btn">
+                        <span class="btn-text">RESET TO DEFAULT</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Leaderboard Menu -->
     <div id="leaderboardMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>Leaderboard</h2>
-            <div id="leaderboardList" class="leaderboard-list">
-                <div class="leaderboard-item">
-                    <span class="rank">1.</span>
-                    <span class="name">Player</span>
-                    <span class="score">0</span>
-                </div>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal leaderboard-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">LEADERBOARD</h2>
+                <button id="closeLeaderboardBtn" class="close-btn">&times;</button>
             </div>
-            <div class="menu-buttons">
-                <button id="closeLeaderboardBtn" class="menu-btn">Close</button>
+            <div class="modal-content">
+                <div class="leaderboard-container">
+                    <div class="leaderboard-header">
+                        <span class="rank-col">RANK</span>
+                        <span class="name-col">NAME</span>
+                        <span class="time-col">TIME</span>
+                        <span class="level-col">LEVEL</span>
+                    </div>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <!-- Leaderboard entries will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="leaderboard-actions">
+                    <button id="clearLeaderboardBtn" class="menu-btn tertiary-btn">
+                        <span class="btn-text">CLEAR SCORES</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- How to Play Menu -->
     <div id="howToPlayMenu" class="overlay-menu hidden">
-        <div class="overlay-content">
-            <h2>How to Play</h2>
-            <div class="how-to-play-content">
-                <div class="instruction-section">
-                    <h3>Controls</h3>
-                    <p><strong>PC:</strong> Use WASD or Arrow Keys to move</p>
-                    <p><strong>Mobile:</strong> Use the virtual joystick</p>
-                    <p><strong>Pause:</strong> Press ESC or tap the pause button</p>
-                </div>
-                <div class="instruction-section">
-                    <h3>Objective</h3>
-                    <p>Navigate through the maze to reach the glowing portal while avoiding shadow clones.</p>
-                </div>
-                <div class="instruction-section">
-                    <h3>Enemies</h3>
-                    <p><strong>Idle Clone:</strong> Slow but persistent follower</p>
-                    <p><strong>Wraith Clone:</strong> Fast and aggressive</p>
-                    <p><strong>Ghost Clone:</strong> Can teleport short distances</p>
-                </div>
-                <div class="instruction-section">
-                    <h3>Powerups</h3>
-                    <p><strong>Speed Boost:</strong> Temporary increased movement speed</p>
-                    <p><strong>Cloak:</strong> Become invisible to clones</p>
-                    <p><strong>Extra Life:</strong> Gain an additional life</p>
-                </div>
+        <div class="overlay-bg"></div>
+        <div class="menu-modal howto-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">HOW TO PLAY</h2>
+                <button id="closeHowToPlayBtn" class="close-btn">&times;</button>
             </div>
-            <div class="menu-buttons">
-                <button id="closeHowToPlayBtn" class="menu-btn">Close</button>
+            <div class="modal-content">
+                <div class="howto-content">
+                    <div class="howto-section">
+                        <h3 class="howto-title">OBJECTIVE</h3>
+                        <p class="howto-text">
+                            Navigate through maze levels to reach the portal while avoiding your shadow clones. 
+                            Each step you take creates a trail that your clones will follow exactly.
+                        </p>
+                    </div>
+                    
+                    <div class="howto-section">
+                        <h3 class="howto-title">CONTROLS</h3>
+                        <div class="controls-grid">
+                            <div class="control-item">
+                                <div class="control-keys">
+                                    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+                                </div>
+                                <span class="control-desc">Movement</span>
+                            </div>
+                            <div class="control-item">
+                                <div class="control-keys">
+                                    <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd>
+                                </div>
+                                <span class="control-desc">Movement</span>
+                            </div>
+                            <div class="control-item">
+                                <div class="control-keys">
+                                    <kbd>ESC</kbd>
+                                </div>
+                                <span class="control-desc">Pause</span>
+                            </div>
+                        </div>
+                        <p class="howto-note">On mobile, use the virtual joystick to move.</p>
+                    </div>
+                    
+                    <div class="howto-section">
+                        <h3 class="howto-title">SHADOW CLONES</h3>
+                        <div class="clones-info">
+                            <div class="clone-type">
+                                <div class="clone-icon basic-clone"></div>
+                                <div class="clone-desc">
+                                    <strong>Basic Clone</strong><br>
+                                    Follows your exact path at normal speed
+                                </div>
+                            </div>
+                            <div class="clone-type">
+                                <div class="clone-icon fast-clone"></div>
+                                <div class="clone-desc">
+                                    <strong>Fast Clone</strong><br>
+                                    Moves faster and sometimes double-steps
+                                </div>
+                            </div>
+                            <div class="clone-type">
+                                <div class="clone-icon wraith-clone"></div>
+                                <div class="clone-desc">
+                                    <strong>Wraith Clone</strong><br>
+                                    Can jump forward randomly in your trail
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="howto-section">
+                        <h3 class="howto-title">POWERUPS</h3>
+                        <div class="powerups-info">
+                            <div class="powerup-type">
+                                <div class="powerup-icon speed-powerup"></div>
+                                <div class="powerup-desc">
+                                    <strong>Speed Boost</strong><br>
+                                    Move faster for 4.5 seconds
+                                </div>
+                            </div>
+                            <div class="powerup-type">
+                                <div class="powerup-icon cloak-powerup"></div>
+                                <div class="powerup-desc">
+                                    <strong>Cloak</strong><br>
+                                    Become invisible to clones for 5 seconds
+                                </div>
+                            </div>
+                            <div class="powerup-type">
+                                <div class="powerup-icon shock-powerup"></div>
+                                <div class="powerup-desc">
+                                    <strong>Shock Wave</strong><br>
+                                    Knock all clones back in their trails
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="howto-section">
+                        <h3 class="howto-title">TIPS & STRATEGY</h3>
+                        <ul class="tips-list">
+                            <li>Plan your route carefully - clones follow your exact path</li>
+                            <li>Use corners and dead ends to your advantage</li>
+                            <li>Collect powerups when safe, but don't take unnecessary risks</li>
+                            <li>Speed boost can help escape tight situations</li>
+                            <li>Cloak allows you to pass through clones safely</li>
+                            <li>Higher levels spawn clones faster and have larger mazes</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Audio Elements -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="assets/bg_music_loop.wav" type="audio/wav">
+    </audio>
+    <audio id="spawnSfx" preload="auto">
+        <source src="assets/spawn.wav" type="audio/wav">
+    </audio>
+    <audio id="powerupSfx" preload="auto">
+        <source src="assets/powerup.wav" type="audio/wav">
+    </audio>
+    <audio id="portalSfx" preload="auto">
+        <source src="assets/portal.wav" type="audio/wav">
+    </audio>
+    <audio id="deathSfx" preload="auto">
+        <source src="assets/death.wav" type="audio/wav">
+    </audio>
+    <audio id="newRecordSfx" preload="auto">
+        <source src="assets/newrecord.wav" type="audio/wav">
+    </audio>
+    <audio id="footstepSfx" preload="auto">
+        <source src="assets/footstep.wav" type="audio/wav">
+    </audio>
 
     <script src="script.js"></script>
 </body>
