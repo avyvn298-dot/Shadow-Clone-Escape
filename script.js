@@ -36,7 +36,6 @@ const clone = {
         }
         
         console.log(`👥 Spawned ${type} clone at (${clone.x}, ${clone.y})`);
-    }
     
     updateClone(clone, deltaTime) {
         clone.stepTimer += deltaTime;
